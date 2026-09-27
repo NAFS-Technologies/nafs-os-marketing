@@ -1,0 +1,28 @@
+name: nafs-os-marketing
+
+services:
+  marketing:
+    image: nafs-os-marketing:${IMAGE_TAG:-local}
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://app.nafs.tech}
+        NEXT_PUBLIC_SIGN_IN_URL: ${NEXT_PUBLIC_SIGN_IN_URL:-https://app.nafs.tech/auth/sign-in}
+        NEXT_PUBLIC_CONTACT_EMAIL: ${NEXT_PUBLIC_CONTACT_EMAIL:-hello@nafsos.com}
+        NEXT_PUBLIC_DEMO_URL: ${NEXT_PUBLIC_DEMO_URL:-/#contact}
+    environment:
+      NAFS_LEAD_WEBHOOK_URL: ${NAFS_LEAD_WEBHOOK_URL:-}
+      STUDIO_RENDERER_ENABLED: ${STUDIO_RENDERER_ENABLED:-0}
+      STUDIO_ORIGIN: ${STUDIO_ORIGIN:-http://localhost:3000}
+      STUDIO_API_URL: ${STUDIO_API_URL:-}
+      STUDIO_REVALIDATION_SECRET: ${STUDIO_REVALIDATION_SECRET:-}
+    ports:
+      - 127.0.0.1:${MARKETING_PORT:-3119}:3000
+    init: true
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'node', '-e', "fetch('http://127.0.0.1:3000/').then(r => { if (!r.ok) process.exit(1) }).catch(() => process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s

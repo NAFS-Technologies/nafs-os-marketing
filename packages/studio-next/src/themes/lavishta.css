@@ -1,0 +1,373 @@
+/*
+ * Lavishta customer-facing brand layer.
+ *
+ * The operational dashboard and BFF remain neutral. These tokens are scoped to
+ * .store-surface so every public commerce, content, checkout, and account route
+ * speaks one visual language without changing commerce authority or API behavior.
+ */
+.store-surface {
+  --lavishta-signal: #e6006e;
+  --lavishta-ink: #1a1017;
+  --lavishta-paper: #f7f2ea;
+  --lavishta-white: #ffffff;
+  --lavishta-blue: #3e5bff;
+  --lavishta-lilac: #d9deff;
+  --lavishta-terracotta: #c96d5d;
+
+  --radius: 0.375rem;
+  --background: #ffffff;
+  --foreground: #1a1017;
+  --card: #ffffff;
+  --card-foreground: #1a1017;
+  --popover: #ffffff;
+  --popover-foreground: #1a1017;
+  --primary: #e6006e;
+  --primary-foreground: #ffffff;
+  --secondary: #d9deff;
+  --secondary-foreground: #1a1017;
+  --muted: #f3efeb;
+  --muted-foreground: #685c64;
+  --accent: #f1edf8;
+  --accent-foreground: #1a1017;
+  --border: #ded7d1;
+  --input: #cfc6c0;
+  --ring: #e6006e;
+
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-inter), var(--font-noto-bengali), sans-serif;
+}
+
+.dark .store-surface {
+  --background: #1a1017;
+  --foreground: #f7f2ea;
+  --card: #251a22;
+  --card-foreground: #f7f2ea;
+  --popover: #251a22;
+  --popover-foreground: #f7f2ea;
+  --primary: #ff2a8d;
+  --primary-foreground: #1a1017;
+  --secondary: #3b3f63;
+  --secondary-foreground: #ffffff;
+  --muted: #30242c;
+  --muted-foreground: #c9bcc4;
+  --accent: #3b3f63;
+  --accent-foreground: #ffffff;
+  --border: #493942;
+  --input: #5a4651;
+  --ring: #ff2a8d;
+  --lavishta-paper: #251a22;
+  --lavishta-white: #2d2028;
+  --lavishta-ink: #f7f2ea;
+  --lavishta-lilac: #3b3f63;
+}
+
+.store-surface :where(h1, h2, .font-heading, .lavishta-display) {
+  font-family: var(--font-anek-latin), var(--font-anek-bangla), var(--font-inter),
+    var(--font-noto-bengali), sans-serif;
+}
+
+.store-surface :where(h1, h2) {
+  text-wrap: balance;
+}
+
+.store-surface :where(p, li) {
+  text-wrap: pretty;
+}
+
+.store-surface [data-slot='button'] {
+  border-radius: 0.25rem;
+  box-shadow: none;
+}
+
+.store-surface [data-slot='card'],
+.store-surface [data-slot='card-header'],
+.store-surface [data-slot='card-footer'] {
+  border-radius: 0.375rem;
+}
+
+.store-surface [data-slot='card'] {
+  border: 1px solid var(--border);
+  box-shadow: none;
+  --tw-ring-color: transparent;
+}
+
+.store-surface :where(input, textarea, select, [role='combobox']) {
+  border-radius: 0.25rem;
+}
+
+.store-surface :where(button, a, input, select, textarea):focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.store-surface .rich-text-content {
+  color: var(--foreground);
+  font-size: 1rem;
+  line-height: 1.8;
+}
+
+.store-surface .rich-text-content :where(h1, h2, h3, h4) {
+  font-family: var(--font-anek-latin), var(--font-anek-bangla), var(--font-inter),
+    var(--font-noto-bengali), sans-serif;
+  letter-spacing: -0.025em;
+}
+
+.store-surface .rich-text-content :where(a) {
+  color: var(--lavishta-signal);
+  font-weight: 600;
+  text-decoration-thickness: 1px;
+}
+
+.store-surface .rich-text-content :where(blockquote) {
+  border-inline-start-color: var(--lavishta-signal);
+  background: color-mix(in srgb, var(--lavishta-lilac) 55%, transparent);
+  color: var(--foreground);
+  padding-block: 0.8rem;
+  padding-inline-end: 1rem;
+}
+
+.store-surface .lavishta-kicker {
+  color: var(--foreground);
+}
+
+.store-surface .lavishta-editorial-rule {
+  border-color: color-mix(in srgb, var(--lavishta-ink) 16%, transparent);
+}
+
+.store-surface .lavishta-signal-text {
+  color: var(--lavishta-signal);
+}
+
+.store-surface .lavishta-ink-panel {
+  background: var(--lavishta-ink);
+  color: var(--lavishta-paper);
+}
+
+.store-surface .lavishta-blue-panel {
+  background: var(--lavishta-blue);
+  color: #ffffff;
+}
+
+.store-surface .lavishta-lilac-panel {
+  background: var(--lavishta-lilac);
+  color: var(--lavishta-ink);
+}
+
+/*
+ * The shopping canvas stays clear white. Warm Paper is reserved for deliberate
+ * editorial, education and campaign sections instead of becoming wallpaper.
+ */
+.store-surface main {
+  background: var(--background);
+}
+
+.store-surface main > :where(section, div) {
+  scroll-margin-top: calc(var(--storefront-header-height, 5rem) + 1rem);
+}
+
+/* Store shell: a quiet retail header with one strong information bar. */
+.lavishta-store-surface [data-sticky-header] > header {
+  border-bottom: 1px solid var(--border);
+  background: var(--lavishta-white) !important;
+  color: var(--foreground) !important;
+  box-shadow: none !important;
+}
+
+/* The original template information strip is superseded by StoreInformationBar. */
+.lavishta-store-surface [data-sticky-header] > header > div:first-child:has(+ div) {
+  display: none !important;
+}
+
+.lavishta-store-surface [data-sticky-header] > header > div:last-child > div:first-child {
+  padding-block: 0.7rem;
+}
+
+.lavishta-store-surface [data-sticky-header] > header form[role='search'],
+.lavishta-store-surface [data-sticky-header] > header form:has(input[type='search']) {
+  isolation: isolate;
+}
+
+.lavishta-store-surface [data-sticky-header] > header input[type='search'] {
+  border-radius: 0.375rem !important;
+  border-color: color-mix(in srgb, var(--lavishta-ink) 22%, transparent) !important;
+  background: #ffffff !important;
+  color: #1a1017 !important;
+}
+
+.lavishta-store-surface [data-sticky-header] > header input[type='search']:focus {
+  border-color: var(--lavishta-signal) !important;
+}
+
+.lavishta-store-surface [data-sticky-header] > header > div:last-child > div + div {
+  border-top: 1px solid color-mix(in srgb, var(--lavishta-ink) 10%, transparent);
+  padding-block: 0.55rem 0.65rem;
+}
+
+.lavishta-store-surface [data-sticky-header] > header > div:last-child > div + div [data-slot='button'] {
+  border-radius: 0.25rem !important;
+}
+
+.lavishta-store-surface [data-sticky-header] > header > div:last-child > div + div a {
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+/* Mobile drawer: one navigable list, not a stack of dashboard cards. */
+.lavishta-store-surface [data-slot='sheet-content']:has(nav[aria-label='Menu navigation']) {
+  width: min(94vw, 27rem) !important;
+  max-width: 27rem !important;
+  gap: 0;
+  border-color: var(--border);
+  background: var(--lavishta-white);
+  box-shadow: -18px 0 48px rgb(26 16 23 / 0.12);
+}
+
+.lavishta-store-surface [data-slot='sheet-content']:has(nav[aria-label='Menu navigation']) nav[aria-label='Menu navigation'] {
+  gap: 0;
+  padding-block: 0.5rem;
+}
+
+.lavishta-store-surface [data-slot='sheet-content']:has(nav[aria-label='Menu navigation']) nav[aria-label='Menu navigation'] > a {
+  min-height: 3rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--lavishta-ink) 8%, transparent);
+  border-radius: 0;
+  padding-inline: 1.25rem;
+}
+
+.lavishta-store-surface [data-slot='sheet-content']:has(nav[aria-label='Menu navigation']) section {
+  padding-block: 1rem;
+}
+
+.lavishta-store-surface [data-slot='sheet-content']:has(nav[aria-label='Menu navigation']) section .grid-cols-2 > a,
+.lavishta-store-surface [data-slot='sheet-content']:has(nav[aria-label='Menu navigation']) section .grid-cols-2 > button {
+  border-radius: 0.375rem;
+  box-shadow: none;
+}
+
+/* Account shell: quiet rail on desktop, compact page switcher on mobile. */
+.lavishta-store-surface [data-account-sidebar] {
+  width: 17rem;
+}
+
+.lavishta-store-surface [data-account-sidebar] > div {
+  border-inline-end: 1px solid var(--border);
+  padding-inline-end: 1.25rem;
+}
+
+.lavishta-store-surface [data-account-mobile-nav] {
+  background: color-mix(in srgb, #ffffff 96%, transparent);
+}
+
+/* Keep dense commerce pages product-first. */
+.lavishta-store-surface [data-catalog-toolbar] {
+  background: color-mix(in srgb, #ffffff 96%, transparent);
+}
+
+.store-surface :where(.shadow-sm, .shadow-md, .shadow-lg, .shadow-xl) {
+  --tw-shadow-color: rgb(26 16 23 / 0.08);
+}
+
+.store-surface [data-sonner-toast] {
+  border-radius: 0.25rem;
+}
+
+@media (max-width: 767px) {
+  .store-surface {
+    --radius: 0.25rem;
+  }
+
+  .lavishta-store-surface [data-sticky-header] > header > div:last-child > div:first-child {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.45rem 0.75rem;
+    padding-block: 0.55rem 0.65rem;
+  }
+
+  .lavishta-store-surface [data-sticky-header] > header > div:last-child > div:first-child > div:first-child {
+    grid-column: 1;
+    min-width: 0;
+  }
+
+  .lavishta-store-surface [data-sticky-header] > header > div:last-child > div:first-child > div:last-child {
+    grid-column: 2;
+    gap: 0.35rem;
+  }
+
+  .lavishta-store-surface [data-sticky-header] > header > div:last-child > div:first-child > form:has(input[type='search']) {
+    display: block !important;
+    grid-column: 1 / -1;
+    grid-row: 2;
+    width: 100% !important;
+    max-width: none !important;
+    flex-basis: auto !important;
+  }
+
+  .lavishta-store-surface [data-sticky-header] > header input[type='search'] {
+    height: 2.65rem !important;
+    padding-inline-start: 2.5rem;
+    font-size: 0.875rem;
+  }
+
+  .lavishta-store-surface [data-sticky-header] > header > div:last-child > div + div {
+    display: none !important;
+  }
+
+  .store-surface main header:has(.lavishta-kicker) {
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+    padding-bottom: 1rem;
+  }
+
+  .store-surface main header:has(.lavishta-kicker) h1 {
+    margin-top: 0.7rem;
+    font-size: clamp(2rem, 10vw, 2.6rem);
+    line-height: 1;
+  }
+
+  .store-surface main header:has(.lavishta-kicker) p {
+    margin-top: 0.65rem;
+    font-size: 0.875rem;
+    line-height: 1.45rem;
+  }
+
+  .store-surface main header:has(.lavishta-kicker) > div + div {
+    display: none;
+  }
+
+  .lavishta-store-surface [data-catalog-toolbar] {
+    position: sticky;
+    top: var(--storefront-header-height, 6.75rem);
+    z-index: 30;
+    margin-inline: -1rem;
+    padding-inline: 1rem;
+    backdrop-filter: blur(14px);
+  }
+
+  .lavishta-store-surface [data-account-mobile-nav] {
+    top: var(--storefront-header-height, 6.75rem);
+  }
+}
+
+@media (max-width: 389px) {
+  .lavishta-store-surface [data-sticky-header] > header > div:last-child > div:first-child {
+    gap-inline: 0.4rem;
+  }
+
+  .lavishta-store-surface [data-sticky-header] > header > div:last-child > div:first-child > div:last-child {
+    gap: 0.15rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .store-surface *,
+  .store-surface *::before,
+  .store-surface *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+.studio-theme--lavishta{--studio-paper:#F7F2EA;--studio-card:#FFFFFF;--studio-ink:#1A1017;--studio-signal:#E6006E;--studio-font:Inter,'Noto Sans Bengali',ui-sans-serif,system-ui,sans-serif}

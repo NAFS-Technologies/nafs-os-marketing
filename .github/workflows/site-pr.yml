@@ -1,0 +1,54 @@
+name: Site PR
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  site:
+    name: NAFS site checks
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: nafs-os-build
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: 1.3.14
+
+      - name: Install frozen dependencies
+        env:
+          BUN_INSTALL_CACHE_DIR: /home/runner/.bun/nafs-ci-install-cache/1.3.14
+          BUN_INSTALL_GLOBAL_STORE: '0'
+          HUSKY: '0'
+        run: |
+          mkdir -p "$BUN_INSTALL_CACHE_DIR"
+          timeout --signal=TERM --kill-after=30s 240s bun install --frozen-lockfile --linker isolated --prefer-offline
+
+      - name: Marketing and lead-delivery contracts
+        run: bun run test
+
+      - name: Typecheck
+        run: bun run typecheck
+
+      - name: Lint
+        run: bun run lint
+
+      - name: Production build
+        env:
+          NEXT_PUBLIC_APP_URL: https://app.nafs.tech
+          NEXT_PUBLIC_SIGN_IN_URL: https://app.nafs.tech/auth/sign-in
+          NEXT_PUBLIC_DEMO_URL: mailto:hello@nafs.com.bd?subject=NAFS%20OS%20Demo
+          NEXT_PUBLIC_CONTACT_EMAIL: hello@nafs.com.bd
+        run: bun run build

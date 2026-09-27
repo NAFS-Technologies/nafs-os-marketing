@@ -1,0 +1,90 @@
+/*
+ * Layout-safety rules shared by every public-site screen.
+ * These contain oversized content without changing the visual design.
+ */
+html,
+body {
+  min-width: 0;
+  max-width: 100%;
+}
+
+body {
+  overflow-x: clip;
+}
+
+fieldset {
+  min-width: 0;
+}
+
+:where(
+  main,
+  header,
+  footer,
+  nav,
+  section,
+  article,
+  form,
+  [data-slot='card'],
+  [data-slot='card-content'],
+  [data-slot='tabs'],
+  [data-slot='tabs-content']
+),
+:where(
+  main,
+  header,
+  footer,
+  nav,
+  section,
+  article,
+  form,
+  [data-slot='card'],
+  [data-slot='card-content'],
+  [data-slot='tabs'],
+  [data-slot='tabs-content']
+) > * {
+  min-width: 0;
+}
+
+:where(img, video, canvas) {
+  max-width: 100%;
+}
+
+:where(input, textarea, select) {
+  max-width: 100%;
+}
+
+:where([data-slot='select-trigger']) {
+  min-width: 0;
+  max-width: 100%;
+}
+
+:where([data-slot='select-value']) {
+  min-width: 0;
+}
+
+:where(
+  [data-slot='dropdown-menu-content'],
+  [data-slot='dropdown-menu-sub-content'],
+  [data-slot='select-content']
+) {
+  max-width: calc(100vw - 2rem);
+}
+
+:where(
+  [data-slot='dropdown-menu-content'],
+  [data-slot='dropdown-menu-sub-content'],
+  [data-slot='select-content']
+) > * {
+  min-width: 0;
+}
+
+:where(
+  [data-slot='dropdown-menu-item'],
+  [data-slot='dropdown-menu-checkbox-item'],
+  [data-slot='dropdown-menu-radio-item'],
+  [data-slot='dropdown-menu-sub-trigger'],
+  [data-slot='select-item']
+) {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}

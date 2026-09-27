@@ -1,0 +1,8 @@
+{
+  "fallback": "electronics",
+  "themes": {
+    "electronics": "2.0.0",
+    "essential": "2.0.0",
+    "lavishta": "1.0.0"
+  }
+}

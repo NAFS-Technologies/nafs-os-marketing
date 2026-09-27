@@ -1,0 +1,33 @@
+{
+  "dependencies": {
+    "server-only": "^0.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "25.9.1",
+    "@types/react": "19.2.15",
+    "@types/react-dom": "19.2.3",
+    "typescript": "5.9.3"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./server": "./src/server.ts",
+    "./styles.css": "./src/styles.css",
+    "./theme-manifest.json": "./src/theme-manifest.json",
+    "./themes/electronics.css": "./src/themes/electronics.css",
+    "./themes/essential.css": "./src/themes/essential.css",
+    "./themes/lavishta.css": "./src/themes/lavishta.css"
+  },
+  "name": "@nafs/studio-next",
+  "peerDependencies": {
+    "next": "16.2.6",
+    "react": "19.2.6",
+    "react-dom": "19.2.6"
+  },
+  "private": true,
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "type": "module",
+  "version": "0.1.0"
+}

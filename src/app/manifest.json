@@ -1,0 +1,27 @@
+{
+  "name": "NAFS — Everything Behind Modern Commerce",
+  "short_name": "NAFS",
+  "description": "Run commerce, connect your existing tools, automate work and grow through B2B and partner programs.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#FAFAF8",
+  "theme_color": "#FAFAF8",
+  "orientation": "any",
+  "lang": "en-BD",
+  "categories": ["business", "productivity", "shopping"],
+  "icons": [
+    { "src": "/favicon/android-chrome-192x192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/favicon/android-chrome-512x512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/favicon/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }
+  ],
+  "screenshots": [
+    { "src": "/opengraph-image", "sizes": "1200x630", "type": "image/png", "form_factor": "wide", "label": "NAFS commerce platform" }
+  ],
+  "shortcuts": [
+    { "name": "Platform", "short_name": "Platform", "description": "Explore the NAFS products for running, connecting and growing commerce", "url": "/products" },
+    { "name": "Integrations", "short_name": "Integrations", "description": "Connect your storefront and business tools", "url": "/integrations" },
+    { "name": "B2B", "short_name": "B2B", "description": "Launch NAFS for client businesses under your brand", "url": "/b2b" },
+    { "name": "Partners", "short_name": "Partners", "description": "Refer clients, deliver services, build integrations or resell NAFS", "url": "/partners" }
+  ]
+}
