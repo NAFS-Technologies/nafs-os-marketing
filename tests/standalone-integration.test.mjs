@@ -23,7 +23,7 @@ if (!siteEnv.includes('NEXT_PUBLIC_SIGN_IN_URL=https://app.nafs.tech/auth/sign-i
   throw new Error('ERP sign-in URL is not configured');
 }
 
-if (!activeHeader.includes("const signInUrl = process.env.NEXT_PUBLIC_SIGN_IN_URL ?? '/auth/sign-in'")) {
+if (!activeHeader.includes("const signInUrl = process.env.NEXT_PUBLIC_SIGN_IN_URL ?? `${appUrl}/auth/sign-in`")) {
   throw new Error('active site header does not resolve the configured ERP sign-in URL');
 }
 

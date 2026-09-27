@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils'
 
 const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
 const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://app.nafs.tech').replace(/\/$/, '')
-const signInUrl = process.env.NEXT_PUBLIC_SIGN_IN_URL ?? '/auth/sign-in'
+const signInUrl = process.env.NEXT_PUBLIC_SIGN_IN_URL ?? `${appUrl}/auth/sign-in`
 const signUpUrl = `${appUrl}/auth/sign-up`
 
 const siteNavigation = [

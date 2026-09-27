@@ -63,7 +63,7 @@ const Header = () => {
         <div className='flex items-center gap-2'>
           <ModeToggle />
           <Link
-            href={process.env.NEXT_PUBLIC_SIGN_IN_URL ?? '/auth/sign-in'}
+            href={process.env.NEXT_PUBLIC_SIGN_IN_URL ?? `${(process.env.NEXT_PUBLIC_APP_URL ?? 'https://app.nafs.tech').replace(/\/$/, '')}/auth/sign-in`}
             className='hidden rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:inline-flex'
           >
             Sign in
@@ -107,7 +107,7 @@ const Header = () => {
           </nav>
           <div className='mt-3 grid grid-cols-2 gap-2 border-t pt-3'>
             <Link
-              href={process.env.NEXT_PUBLIC_SIGN_IN_URL ?? '/auth/sign-in'}
+              href={process.env.NEXT_PUBLIC_SIGN_IN_URL ?? `${(process.env.NEXT_PUBLIC_APP_URL ?? 'https://app.nafs.tech').replace(/\/$/, '')}/auth/sign-in`}
               className='rounded-xl border px-4 py-3 text-center text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary'
               onClick={() => setIsMenuOpen(false)}
             >
