@@ -1,7 +1,7 @@
 import { spawn } from 'node:child_process'
 import { once } from 'node:events'
 import { createServer } from 'node:http'
-import { mkdir, writeFile } from 'node:fs/promises'
+import { cp, mkdir, writeFile } from 'node:fs/promises'
 
 const port = Number(process.env.SITE_TEST_PORT ?? 3100)
 const baseUrl = `http://127.0.0.1:${port}`
@@ -48,12 +48,15 @@ const sink = createServer(async (request, response) => {
   }
 })
 
+await cp('.next/static', '.next/standalone/.next/static', { recursive: true })
+await cp('public', '.next/standalone/public', { recursive: true })
+await cp('src/content/blog', '.next/standalone/src/content/blog', { recursive: true })
 sink.listen(0, '127.0.0.1')
 await once(sink, 'listening')
 
 const sinkUrl = `http://127.0.0.1:${sink.address().port}`
-const environment = { ...process.env, SITE_BASE_URL: baseUrl, TEST_LEAD_SINK_URL: sinkUrl, NAFS_LEAD_WEBHOOK_URL: `${sinkUrl}/lead`, NAFS_LEAD_WEBHOOK_TOKEN: '', NEXT_TELEMETRY_DISABLED: '1' }
-const server = spawn(process.execPath, ['node_modules/next/dist/bin/next', 'start', '--hostname', '127.0.0.1', '--port', String(port)], { env: environment, stdio: ['ignore', 'pipe', 'pipe'] })
+const environment = { ...process.env, HOSTNAME: '127.0.0.1', PORT: String(port), SITE_BASE_URL: baseUrl, TEST_LEAD_SINK_URL: sinkUrl, NAFS_LEAD_WEBHOOK_URL: `${sinkUrl}/lead`, NAFS_LEAD_WEBHOOK_TOKEN: '', NEXT_TELEMETRY_DISABLED: '1' }
+const server = spawn(process.execPath, ['.next/standalone/server.js'], { env: environment, stdio: ['ignore', 'pipe', 'pipe'] })
 const output = []
 
 server.stdout.on('data', data => { output.push(data.toString()); process.stdout.write(data) })
@@ -84,8 +87,17 @@ try {
 
   if (!ready) throw new Error('Next.js did not become ready')
 
-  await run('tests/mobile-browser-acceptance.mjs')
-  await run('tests/site-interactions.mjs')
+  const failures = []
+
+  for (const file of ['tests/site-interactions.mjs', 'tests/experience-acceptance.mjs', 'tests/mobile-browser-acceptance.mjs']) {
+    try {
+      await run(file)
+    } catch (error) {
+      failures.push(String(error))
+    }
+  }
+
+  if (failures.length) throw new Error(failures.join('\n'))
 } finally {
   server.kill('SIGTERM')
   sink.closeAllConnections()

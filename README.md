@@ -1,89 +1,80 @@
-# NAFS Public Site
+# NAFS public site
 
-Public commercial Next.js site. Marketing follows current code and
-[the NAFS OS product contract](https://github.com/NAFS-Technologies/nafs-os/blob/main/docs/current-product-contract.md).
+Standalone Next.js marketing site for NAFS commerce operations. Marketing follows
+[the NAFS OS product contract](https://github.com/NAFS-Technologies/nafs-os/blob/main/docs/current-product-contract.md),
+not a list of aspirational features.
 
-## Content contract
+## Content and design
 
-[Page routes](src/app/%28pages%29/) and [sitemap](src/app/sitemap.ts) own the
-published route inventory; [landing content](src/content/nafs-landing.ts) owns
-product, solution and use-case copy.
+`src/content/product-catalog.ts` owns active product, solution, use-case,
+integration and navigation data. `src/components/marketing` owns shared marketing
+compositions. `src/content/demo-workspace.ts` contains synthetic illustrations,
+not production records or captured ERP screens. Legacy template components and
+content are not public proof and must not be reintroduced into active routes.
 
-The homepage uses a compact story sequence: platform category → technology
-proof → one order's operating pulse → ecosystem map → migration/integrations
-→ B2B business → partnerships → visibility/control. Keep visual proof and
-buyer language ahead of text walls. Do not restore the 420vh homepage tour.
+Homepage: product introduction → interactive illustration → operating problems
+→ order-to-settlement journey → core solutions → reporting/assistance → verified
+connection scope → FAQ → walkthrough. B2B and partner journeys have dedicated
+pages. Do not turn the homepage into an unqualified portfolio catalogue or a
+long scroll-jacked product tour.
 
-Ordinary desktop headlines normally use 56–76px, navigation 15–16px, body
-16–18px and technical labels 11–12px. Motion explains state or commercial flow.
-Use real technology logos/workflow scenes; logs and traces must explain
-operational dependability. Check layout at 360, 390, 412, 768, 1024, 1440 and 1920px; preserve
-accessibility, touch targets and reduced motion. No document overflow at 360px.
+Use the [rebuild guide](docs/marketing-rebuild.md), [editorial guide](docs/editorial.md)
+and [release checklist](docs/marketing-release.md). They distinguish source
+implementation, browser evidence, approved assets and production readiness.
 
-## Publishable claims
+## Development and checks
 
-- ERP/Postgres is the commerce authority; Payload has separate content
-  persistence. External channels/providers connect to NAFS.
-- Redis/Valkey is not a baseline NAFS OS dependency; specialized runtimes such
-  as Partners use it. Partners also targets MySQL, ClickHouse and BullMQ.
-- Nango owns external authorization/credentials/connections. Its 900+ API
-  catalog is not 900 implemented NAFS business mappings; reverify the catalog
-  figure before changing that claim.
-- Flexprice owns control-plane billing/usage/entitlements; Cloudflare for SaaS
-  owns custom-hostname TLS; NAFS owns partner/client/brand/domain relationships
-  and provider-neutral commission events.
-- WooCommerce has a managed approval path without API-key copying. Actual
-  WooCommerce/Shopify tenant operation needs configuration/evidence. Do not
-  promise an exact connection time without measurements.
-- Pathao is the implemented Courier provider. Reverify before claiming a
-  complete Daraz connector.
-- Operator pricing is contact-sales. Exact prices, limits, fees, integrations,
-  B2B terms, referral commissions, reseller margins and support commitments
-  require commercial approval. No invented logos/testimonials, guaranteed
-  earnings, universal affiliate rate or unmeasured performance claim.
-- Approved plan names/price overrides, implementation/migration/services,
-  integrations/add-ons, client onboarding, brand/domain controls and recurring
-  subscriptions may explain B2B economics; keep maturity truthful.
-
-## Development
-
-From the repository root:
+Use the pinned Bun version in package.json and a supported Node version.
 
 ```bash
 bun install --frozen-lockfile
 bun run dev
+bun run test:content
 bun run test
 bun run typecheck
 bun run lint
 bun run build
+bun run test:browser:ci
 ```
 
-Configure public URLs/contact data from [the environment example](.env.example)
-and [landing defaults](src/content/nafs-landing.ts); verify them before
-publishing. The [lead webhook](src/app/api/demo-request/route.ts) stays server-only.
+Browser CI starts the production build and an isolated local webhook fixture.
+It does not send real inquiries. The route matrix covers 360, 390, 412, 768,
+1024, 1440 and 1920px. Screenshots are review candidates until inspected and
+approved; automated capture is not visual-parity acceptance.
 
-## Repository boundary
+## Configuration
 
-Extracted from `NAFS-Technologies/nafs-os` at `c575e87dc`, originally `apps/site`.
-Routes, assets, lead delivery and optional Studio integration are preserved.
-`packages/studio-next` is a vendored snapshot from that revision so installs and
-builds do not require a NAFS OS checkout or a private package registry. Update it
-explicitly when adopting upstream SDK changes.
+Copy `.env.example` to an ignored local environment file. `NEXT_PUBLIC_SITE_URL`
+owns marketing metadata and canonicals. `NEXT_PUBLIC_ERP_URL` owns operator signup
+and default signin; the explicit signin override stays supported. Legacy
+`NEXT_PUBLIC_APP_URL` is only a marketing-origin fallback. Set the real public
+origin explicitly at cutover. Public settings are build-time inputs.
+
+`NAFS_LEAD_WEBHOOK_URL` and optional `NAFS_LEAD_WEBHOOK_TOKEN` stay server-only.
+No successful inquiry response is returned without receiver acceptance (apart
+from deliberately discarded honeypots). The receiver must persist accepted leads
+and deduplicate Idempotency-Key; the site does not claim exactly-once delivery.
+Configure trusted edge abuse controls without exposing provider secrets.
+
+Optional analytics are off until visitor opt-in. No third-party tracker is
+installed by default. Free-trial copy is gated on explicit commercial approval.
+Prices, support, integration readiness and partner terms require confirmation.
 
 ## Independent deployment
 
-The root Dockerfile builds the Next.js standalone server. `compose.yml` owns only
-the marketing service and binds it to `127.0.0.1:3119` by default; set
-`MARKETING_PORT` to choose another host port. Public URLs are build arguments; the
-lead webhook and Studio settings stay server-only. Keep local secrets in `.env`,
-using [.env.example](.env.example) as the template.
+The standalone Docker service binds to `127.0.0.1:3119` by default. Public build
+arguments and server-only secrets remain separate.
 
 ```bash
 docker compose build marketing
 docker compose up -d --no-build marketing
 ```
 
-Build and health-check this service before changing the public reverse proxy.
-The existing NAFS OS native site release stays running until an explicit cutover;
-NAFS OS no longer builds or deploys marketing. No DNS, host routing or services
-are changed by extracting this repository.
+Build and health-check before a separately approved reverse-proxy cutover. Keep
+the prior site/image available for rollback. This repository does not migrate
+ERP data, change authentication, deploy the CMS, or alter DNS/routing.
+
+Extracted from `NAFS-Technologies/nafs-os` at `c575e87dc`, originally `apps/site`.
+`packages/studio-next` remains a vendored SDK snapshot; update it deliberately
+when adopting upstream changes. Studio publishing remains separately owned and
+disabled by default, not an implicitly available new page-builder integration.

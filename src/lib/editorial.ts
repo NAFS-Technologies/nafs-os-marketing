@@ -22,6 +22,7 @@ export function parsePostMetadata(slug: string, value: unknown): PostMetadata {
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error(`Invalid metadata: ${slug}`)
 
   const data = value as Record<string, unknown>
+
   const text = (key: string, maximum: number, required = false) => {
     const input = data[key]
 
@@ -30,6 +31,7 @@ export function parsePostMetadata(slug: string, value: unknown): PostMetadata {
 
     return input.trim()
   }
+
   const title = text('title', 180, true)!
   const description = text('description', 400, true)!
   const publishedAt = text('publishedAt', 10, true)!

@@ -17,6 +17,7 @@ function load(file) {
 const { parsePostMetadata, isPublishedPost } = load('src/lib/editorial.ts')
 const { products, solutions, useCases } = load('src/content/product-catalog.ts')
 const root = 'src/content/blog'
+
 const posts = readdirSync(root).filter(name => name.startsWith('nafs-') && name.endsWith('.mdx')).map(name => {
   const { data, content } = matter(readFileSync(path.join(root, name), 'utf8'))
   const metadata = parsePostMetadata(name.slice(0, -4), data)
@@ -25,6 +26,7 @@ const posts = readdirSync(root).filter(name => name.startsWith('nafs-') && name.
 
   return { metadata, content }
 })
+
 const known = new Set(['/', '/products', '/solutions', '/use-cases', '/integrations', '/pricing', '/b2b', '/partners', '/blog', ...products.map(item => `/products/${item.slug}`), ...solutions.map(item => `/solutions/${item.id}`), ...useCases.map(item => `/use-cases/${item.slug}`), ...posts.filter(post => isPublishedPost(post.metadata)).map(post => `/blog/${post.metadata.slug}`)])
 
 for (const post of posts.filter(item => isPublishedPost(item.metadata))) {

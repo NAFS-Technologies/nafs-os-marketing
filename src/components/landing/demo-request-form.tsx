@@ -14,6 +14,7 @@ type FieldName = 'name' | 'businessName' | 'email' | 'phone' | 'monthlyOrders' |
 type Submission = { status: 'idle' | 'submitting' | 'success' | 'error'; message: string }
 
 const fields: FieldName[] = ['name', 'businessName', 'email', 'phone', 'monthlyOrders', 'interest', 'message']
+
 const textFields = [
   { name: 'name' as const, label: 'Your name', type: 'text', autoComplete: 'name', maxLength: 100 },
   { name: 'businessName' as const, label: 'Business name', type: 'text', autoComplete: 'organization', maxLength: 120 },
@@ -69,6 +70,7 @@ export function DemoRequestForm() {
         body: JSON.stringify({ ...values, requestId: identity.id, attribution: currentCampaignContext() }),
         signal: controller.signal
       })
+
       const payload: unknown = await response.json().catch(() => null)
 
       if (activeRequest.current !== controller) return
@@ -103,6 +105,7 @@ export function DemoRequestForm() {
       if (activeRequest.current === controller) activeRequest.current = null
     }
   }
+
   const fieldProps = (name: FieldName) => ({ id: `${id}-${name}`, 'aria-invalid': errors[name] ? true as const : undefined, 'aria-describedby': errors[name] ? `${id}-${name}-error` : undefined })
   const errorFor = (name: FieldName) => errors[name] ? <span className='m-field-error' id={`${id}-${name}-error`}>{errors[name]}</span> : null
 
