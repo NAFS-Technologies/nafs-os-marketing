@@ -110,7 +110,7 @@ export function DemoRequestForm() {
   const errorFor = (name: FieldName) => errors[name] ? <span className='m-field-error' id={`${id}-${name}-error`}>{errors[name]}</span> : null
 
   return (
-    <form ref={formRef} className='m-lead-form' aria-labelledby={`${id}-title`} aria-busy={pending} onSubmit={handleSubmit} onFocusCapture={() => {
+    <form ref={formRef} method='post' action='/api/demo-request' className='m-lead-form' aria-labelledby={`${id}-title`} aria-busy={pending} onSubmit={handleSubmit} onFocusCapture={() => {
       if (!started.current) {
         started.current = true
         emitMarketingEvent('lead_started', 'walkthrough')

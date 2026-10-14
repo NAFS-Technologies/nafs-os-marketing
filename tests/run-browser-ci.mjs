@@ -1,3 +1,4 @@
+import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
 import { once } from 'node:events'
 import { createServer } from 'node:http'
@@ -55,7 +56,7 @@ sink.listen(0, '127.0.0.1')
 await once(sink, 'listening')
 
 const sinkUrl = `http://127.0.0.1:${sink.address().port}`
-const environment = { ...process.env, HOSTNAME: '127.0.0.1', PORT: String(port), SITE_BASE_URL: baseUrl, TEST_LEAD_SINK_URL: sinkUrl, NAFS_LEAD_WEBHOOK_URL: `${sinkUrl}/lead`, NAFS_LEAD_WEBHOOK_TOKEN: '', NEXT_TELEMETRY_DISABLED: '1' }
+const environment = { ...process.env, NODE_ENV: 'production', HOSTNAME: '127.0.0.1', PORT: String(port), SITE_BASE_URL: baseUrl, TEST_LEAD_SINK_URL: sinkUrl, NAFS_LEAD_WEBHOOK_URL: `${sinkUrl}/lead`, NAFS_LEAD_WEBHOOK_TOKEN: '', NEXT_TELEMETRY_DISABLED: '1' }
 const server = spawn(process.execPath, ['.next/standalone/server.js'], { env: environment, stdio: ['ignore', 'pipe', 'pipe'] })
 const output = []
 
@@ -64,6 +65,7 @@ server.stderr.on('data', data => { output.push(data.toString()); process.stderr.
 
 async function run(file) {
   const child = spawn(process.execPath, [file], { env: environment, stdio: 'inherit' })
+
   const [code] = await once(child, 'exit')
 
   if (code !== 0) throw new Error(`${file} failed with exit ${code}`)
@@ -86,6 +88,16 @@ try {
   }
 
   if (!ready) throw new Error('Next.js did not become ready')
+
+  // Prove that the built server consumes runtime-only delivery configuration.
+  // The receiver intentionally rejects this synthetic inquiry, so it is not counted.
+  const deliveryProbe = await fetch(`${baseUrl}/api/demo-request`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ name: 'Runtime fixture', businessName: 'Webhook failure fixture', email: 'runtime-fixture@example.com', phone: '+8801712345678', monthlyOrders: 'under-500', interest: 'orders-delivery', message: '' })
+  })
+
+  assert.equal(deliveryProbe.status, 502, 'standalone server must reach the runtime-configured synthetic receiver')
 
   const failures = []
 

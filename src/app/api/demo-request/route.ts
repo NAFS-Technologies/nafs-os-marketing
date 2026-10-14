@@ -1,4 +1,7 @@
+import { env as serverEnvironment } from 'node:process'
+
 export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
 const MAX_BODY_BYTES = 16_000
 const fieldLimits = { name: 100, businessName: 120, email: 160, phone: 30, monthlyOrders: 40, interest: 80, message: 1500 } as const
@@ -12,6 +15,13 @@ type FieldName = keyof typeof fieldLimits
 
 const reply = (message: string, status: number, extra: Record<string, unknown> = {}) =>
   Response.json({ message, ...extra }, { status, headers: { 'Cache-Control': 'no-store' } })
+
+function unavailable(reason: 'missing-configuration' | 'invalid-destination') {
+  // Operational signal only: never log the destination, credential or inquiry body.
+  console.error(`[lead-delivery] ${reason}`)
+
+  return reply('Online requests are temporarily unavailable. Please contact us by email.', 503)
+}
 
 function permittedOrigin(request: Request) {
   const origin = request.headers.get('origin')
@@ -51,7 +61,6 @@ export async function POST(request: Request) {
     let body = ''
     let bytes = 0
 
-    // Bound actual bytes, including streams with an absent or untrusted length header.
     while (true) {
       const { done, value } = await reader.read()
 
@@ -78,7 +87,6 @@ export async function POST(request: Request) {
 
   const values = payload as Record<string, unknown>
 
-  // A honeypot response is deliberately indistinguishable to automated submissions.
   if (typeof values.companyWebsite === 'string' && values.companyWebsite.trim()) {
     return reply('Thanks. Your request has been received.', 202, { accepted: true })
   }
@@ -124,24 +132,25 @@ export async function POST(request: Request) {
     }
   }
 
-  const webhookUrl = process.env.NAFS_LEAD_WEBHOOK_URL?.trim()
+  // Read deployment secrets from Node at request time, never from public build configuration.
+  const webhookUrl = serverEnvironment.NAFS_LEAD_WEBHOOK_URL?.trim()
 
-  if (!webhookUrl) return reply('Online requests are temporarily unavailable. Please contact us by email.', 503)
+  if (!webhookUrl) return unavailable('missing-configuration')
 
   try {
     const url = new URL(webhookUrl)
     const local = ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname)
 
     if (url.username || url.password || (url.protocol !== 'https:' && !(local && url.protocol === 'http:'))) {
-      return reply('Online requests are temporarily unavailable. Please contact us by email.', 503)
+      return unavailable('invalid-destination')
     }
   } catch {
-    return reply('Online requests are temporarily unavailable. Please contact us by email.', 503)
+    return unavailable('invalid-destination')
   }
 
   const lead = { ...fields, email: fields.email.toLowerCase(), source: 'nafs-site-demo-request', receivedAt: new Date().toISOString(), requestId, ...(Object.keys(attribution).length ? { attribution } : {}) }
   const headers: Record<string, string> = { 'content-type': 'application/json', 'x-nafs-source': 'website-demo-request', 'Idempotency-Key': requestId }
-  const webhookToken = process.env.NAFS_LEAD_WEBHOOK_TOKEN?.trim()
+  const webhookToken = serverEnvironment.NAFS_LEAD_WEBHOOK_TOKEN?.trim()
 
   if (webhookToken) headers.authorization = `Bearer ${webhookToken}`
 
