@@ -1,38 +1,25 @@
 import type { MetadataRoute } from 'next'
 
-import { productEcosystem, solutionCards, useCases } from '@/content/nafs-landing'
+import { products as productEcosystem, solutions as solutionCards, useCases } from '@/content/product-catalog'
 import { getPosts } from '@/lib/posts'
+import { absoluteUrl, siteConfig } from '@/lib/site-config'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://app.nafs.tech'
-  const posts = await getPosts()
-  const now = new Date()
+  if (!siteConfig.indexable) return []
 
-  const marketingRoutes = [
-    { path: '', priority: 1 },
-    { path: '/products', priority: 0.95 },
-    { path: '/integrations', priority: 0.94 },
-    { path: '/b2b', priority: 0.93 },
-    { path: '/partners', priority: 0.92 },
-    { path: '/solutions', priority: 0.9 },
-    { path: '/use-cases', priority: 0.9 },
-    { path: '/pricing', priority: 0.9 },
-    { path: '/blog', priority: 0.7 },
-    ...productEcosystem.map(product => ({ path: `/products/${product.slug}`, priority: 0.82 })),
-    ...solutionCards.map(solution => ({ path: `/solutions/${solution.id}`, priority: 0.8 })),
-    ...useCases.map(useCase => ({ path: `/use-cases/${useCase.slug}`, priority: 0.78 }))
+  const posts = await getPosts()
+  const paths = [
+    '', '/products', '/integrations', '/b2b', '/partners', '/solutions', '/use-cases', '/pricing', '/blog',
+    ...productEcosystem.map(product => `/products/${product.slug}`),
+    ...solutionCards.map(solution => `/solutions/${solution.id}`),
+    ...useCases.map(useCase => `/use-cases/${useCase.slug}`)
   ]
 
   return [
-    ...marketingRoutes.map(route => ({
-      url: `${appUrl}${route.path}`,
-      lastModified: now,
-      changeFrequency: 'weekly' as const,
-      priority: route.priority
-    })),
+    ...paths.map(path => ({ url: absoluteUrl(path), changeFrequency: 'monthly' as const, priority: path ? 0.7 : 1 })),
     ...posts.map(post => ({
-      url: `${appUrl}/blog/${post.slug}`,
-      lastModified: now,
+      url: absoluteUrl(`/blog/${post.slug}`),
+      ...(post.publishedAt && Number.isFinite(Date.parse(post.publishedAt)) ? { lastModified: new Date(post.publishedAt) } : {}),
       changeFrequency: 'monthly' as const,
       priority: 0.6
     }))
