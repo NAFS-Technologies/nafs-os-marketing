@@ -1,207 +1,45 @@
 import Link from 'next/link'
-
 import { ArrowRightIcon } from 'lucide-react'
 
-import { PageReveal } from '@/components/landing/cinematic-motion'
 import { DemoRequestForm } from '@/components/landing/demo-request-form'
-import {
-  B2BPlatformScene,
-  CommercePulseScene,
-  IntegrationLogoCloud,
-  MigrationBoard,
-  PartnerGrowthScene,
-  ProductMapScene,
-  TechnologyRails,
-  VisibilityConsole
-} from '@/components/landing/platform-visuals'
-import { PristineHeroScene } from '@/components/landing/pristine-scenes'
+import { ProductShowcase } from '@/components/marketing/product-showcase'
+import { Actions, CardLink, FAQ, Readiness, Section, SectionHeading } from '@/components/marketing/primitives'
+import { integrations, solutions } from '@/content/product-catalog'
 
-const signUpUrl = `${(process.env.NEXT_PUBLIC_APP_URL ?? 'https://app.nafs.tech').replace(/\/$/, '')}/auth/sign-up`
+import '@/app/marketing-product.css'
 
-const platformPillars = [
-  ['Run', 'Manage orders, stock, fulfillment, purchasing, payments and reporting from one connected workspace.'],
-  ['Connect', 'Keep the storefronts and tools you already use, then connect them to NAFS as your business grows.'],
-  ['Launch', 'Offer NAFS to client businesses under your own brand, plans and domains.'],
-  ['Grow', 'Create referral, agency and reseller programs with clear tracking from introduction to commission.']
+const journey = [
+  ['Confirm', 'Keep customer, items and payment context together.'],
+  ['Pick', 'Record the actual pick and reserve stock.'],
+  ['Pack', 'Prepare the parcel with the right items.'],
+  ['Dispatch', 'Review details and book the courier.'],
+  ['Deliver', 'Follow updates and handle exceptions.'],
+  ['Settle', 'Compare collections and close the money loop.']
 ] as const
 
-const rolloutSteps = [
-  'Connect the tools and channels you already use.',
-  'Fix the handoffs costing your team the most time.',
-  'Add more NAFS products as the value becomes clear.'
-] as const
+const questions = [
+  { question: 'Do we need to replace our existing website?', answer: 'Not necessarily. WooCommerce and Shopify connection paths can be configured for a rollout. We review your store, data mappings and live workflow before recommending a migration.' },
+  { question: 'Is every NAFS product available today?', answer: 'No. The product catalogue separates guided rollout from products in development. Your walkthrough confirms the exact features, providers and configuration available for your business.' },
+  { question: 'Can we start with one part of the operation?', answer: 'Yes. Begin with a defined workflow such as inventory, fulfillment or COD review. Agree its dependencies and acceptance checks before expanding.' },
+  { question: 'Will AI make financial or inventory decisions automatically?', answer: 'AI-assisted output should remain a recommendation until the appropriate person and system checks approve consequential use. We do not promise autonomous money or stock changes.' }
+]
 
-export const NafsLandingPage = () => (
-  <>
-    <section id='home' className='relative overflow-hidden bg-[#fafaf8] pt-24 sm:pt-28'>
-      <div className='pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(15,15,15,.025)_1px,transparent_1px),linear-gradient(to_bottom,rgba(15,15,15,.025)_1px,transparent_1px)] bg-[size:80px_80px] [mask-image:linear-gradient(to_bottom,black,transparent_86%)]' aria-hidden='true' />
-      <div className='relative mx-auto max-w-[1380px] px-4 sm:px-6 lg:px-8'>
-        <div className='mx-auto max-w-6xl pt-12 text-center sm:pt-20'>
-          <PageReveal>
-            <p className='font-mono text-xs font-medium uppercase tracking-[0.16em] text-[#8e8e89]'>NAFS / COMMERCE OPERATING SYSTEM</p>
-            <h1 className='mt-6 text-balance text-[48px] font-medium leading-[0.96] tracking-[-0.062em] text-[#0b0b0b] min-[390px]:text-[54px] sm:text-[80px] sm:tracking-[-0.072em] lg:text-[112px]'>Everything behind modern commerce.</h1>
-            <p className='mx-auto mt-7 max-w-3xl text-pretty text-lg leading-8 text-[#676762] sm:mt-8 sm:text-xl'>
-              Run orders, inventory, fulfillment, delivery, payments and automation from one place—while keeping the storefronts and tools your business already depends on.
-            </p>
-            <div className='mt-8 flex flex-col items-stretch justify-center gap-3 min-[420px]:items-center sm:mt-9 sm:flex-row'>
-              <Link href={signUpUrl} className='site-action site-arrow-link inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[#111] px-6 text-[15px] font-semibold text-white shadow-[0_10px_28px_rgba(0,0,0,.12)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/55 focus-visible:ring-offset-2'>Start free trial <ArrowRightIcon className='size-4' /></Link>
-              <Link href='#contact' className='site-action inline-flex h-12 items-center justify-center rounded-full border border-[#dcdcd8] bg-white px-6 text-[15px] font-semibold text-[#171717] transition hover:border-[#bdbdb7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/55 focus-visible:ring-offset-2'>Plan a walkthrough</Link>
-            </div>
-            <Link href='/integrations' className='site-text-link mt-3 inline-flex min-h-11 items-center justify-center rounded-sm text-sm font-medium text-[#676762] underline underline-offset-4 transition hover:text-[#111] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/55 focus-visible:ring-offset-2'>Connect your existing tools</Link>
-          </PageReveal>
-        </div>
-        <PageReveal delay={0.12}><PristineHeroScene /></PageReveal>
-      </div>
-    </section>
-
-    <section className='bg-white py-12 sm:py-16'>
-      <div className='mx-auto max-w-[1380px] px-4 sm:px-6 lg:px-8'>
-        <PageReveal>
-          <div className='grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4'>
-            {[
-              ['900+', 'apps and APIs available through Nango'],
-              ['1', 'connected place to run commerce'],
-              ['B2B', 'launch NAFS under your brand'],
-              ['Partners', 'track referrals and commissions']
-            ].map(([value, label]) => (
-              <div key={label} className='site-card min-h-28 rounded-2xl border border-[#e7e7e3] bg-[#fafaf8] p-4 sm:min-h-32 sm:p-5'>
-                <p className='site-tabular text-2xl font-semibold tracking-[-0.04em] text-[#111] sm:text-3xl'>{value}</p>
-                <p className='mt-2 text-sm leading-6 text-[#74746f]'>{label}</p>
-              </div>
-            ))}
-          </div>
-        </PageReveal>
-        <div className='mt-5'><TechnologyRails /></div>
-      </div>
-    </section>
-
-    <section className='bg-[#fafaf8] py-20 sm:py-28'>
-      <div className='mx-auto max-w-[1320px] px-4 sm:px-6 lg:px-8'>
-        <PageReveal>
-          <div className='mx-auto mb-10 max-w-4xl text-center sm:mb-12'>
-            <p className='text-sm font-semibold uppercase tracking-[.12em] text-violet-700'>FROM ORDER TO OUTCOME</p>
-            <h2 className='mt-4 text-balance text-4xl font-medium tracking-[-0.05em] text-[#111] sm:text-6xl'>One sale. The entire business keeps moving.</h2>
-            <p className='mx-auto mt-5 max-w-2xl text-lg leading-8 text-[#72726d]'>When an order arrives, NAFS keeps stock, warehouse work, delivery and follow-up moving together.</p>
-          </div>
-        </PageReveal>
-        <CommercePulseScene />
-      </div>
-    </section>
-
-    <section className='border-y border-[#e7e7e4] bg-white py-20 sm:py-28'>
-      <div className='mx-auto max-w-[1320px] px-4 sm:px-6 lg:px-8'>
-        <PageReveal>
-          <div className='grid gap-8 lg:grid-cols-[.72fr_1.28fr] lg:items-end'>
-            <div>
-              <p className='text-sm font-semibold uppercase tracking-[.12em] text-violet-700'>THE PLATFORM</p>
-              <h2 className='mt-4 text-4xl font-medium tracking-[-0.05em] text-[#111] sm:text-6xl'>One platform. Focused products for every part of commerce.</h2>
-            </div>
-            <p className='max-w-xl text-lg leading-8 text-[#71716c] lg:justify-self-end'>NAFS OS runs the core business. Storefront, Flow, Mobile, Courier, B2B and Partners add the customer, automation, delivery and growth tools you need around it.</p>
-          </div>
-        </PageReveal>
-        <div className='mt-10 sm:mt-12'><ProductMapScene /></div>
-        <div className='mt-6 grid gap-3 sm:mt-8 md:grid-cols-2 lg:grid-cols-4'>
-          {platformPillars.map(([title, detail]) => (
-            <div key={title} className='site-card rounded-2xl border border-[#e8e8e4] bg-[#fafaf8] p-5'>
-              <p className='text-lg font-semibold text-[#222]'>{title}</p>
-              <p className='mt-3 text-base leading-7 text-[#74746f]'>{detail}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-
-    <section className='bg-[#fafaf8] py-20 sm:py-28'>
-      <div className='mx-auto max-w-[1320px] px-4 sm:px-6 lg:px-8'>
-        <PageReveal>
-          <div className='grid gap-8 lg:grid-cols-[.72fr_1.28fr] lg:items-end'>
-            <div>
-              <p className='text-sm font-semibold uppercase tracking-[.12em] text-violet-700'>MIGRATION & INTEGRATIONS</p>
-              <h2 className='mt-4 text-4xl font-medium tracking-[-0.05em] text-[#111] sm:text-6xl'>Keep your storefront. Improve everything behind it.</h2>
-            </div>
-            <div className='max-w-xl lg:justify-self-end'>
-              <p className='text-lg leading-8 text-[#71716c]'>Connect WooCommerce or Shopify, bring across the information you need and move daily operations into NAFS without rebuilding the customer experience first.</p>
-              <Link href='/integrations' className='site-arrow-link mt-5 inline-flex items-center gap-2 text-base font-semibold text-[#111] focus-visible:outline-none'>Explore integrations <ArrowRightIcon className='size-4' /></Link>
-            </div>
-          </div>
-        </PageReveal>
-        <div className='mt-10 sm:mt-12'><MigrationBoard /></div>
-        <div className='mt-6'><IntegrationLogoCloud /></div>
-      </div>
-    </section>
-
-    <section className='border-y border-[#e7e7e4] bg-white py-20 sm:py-28'>
-      <div className='mx-auto max-w-[1320px] px-4 sm:px-6 lg:px-8'>
-        <PageReveal>
-          <div className='grid gap-8 lg:grid-cols-[.72fr_1.28fr] lg:items-end'>
-            <div>
-              <p className='text-sm font-semibold uppercase tracking-[.12em] text-violet-700'>B2B PLATFORM</p>
-              <h2 className='mt-4 text-4xl font-medium tracking-[-0.05em] text-[#111] sm:text-6xl'>Launch commerce software under your own brand.</h2>
-            </div>
-            <div className='max-w-xl lg:justify-self-end'>
-              <p className='text-lg leading-8 text-[#71716c]'>Create your offer, onboard client businesses, use custom domains and build recurring software and service revenue without developing the platform from zero.</p>
-              <Link href='/b2b' className='site-arrow-link mt-5 inline-flex items-center gap-2 text-base font-semibold text-[#111] focus-visible:outline-none'>Explore the B2B platform <ArrowRightIcon className='size-4' /></Link>
-            </div>
-          </div>
-        </PageReveal>
-        <div className='mt-10 sm:mt-12'><B2BPlatformScene /></div>
-      </div>
-    </section>
-
-    <section className='bg-[#fafaf8] py-20 sm:py-28'>
-      <div className='mx-auto max-w-[1320px] px-4 sm:px-6 lg:px-8'>
-        <PageReveal>
-          <div className='grid gap-8 lg:grid-cols-[.72fr_1.28fr] lg:items-end'>
-            <div>
-              <p className='text-sm font-semibold uppercase tracking-[.12em] text-violet-700'>PARTNERS & REFERRALS</p>
-              <h2 className='mt-4 text-4xl font-medium tracking-[-0.05em] text-[#111] sm:text-6xl'>Grow with NAFS—and earn from the value you create.</h2>
-            </div>
-            <div className='max-w-xl lg:justify-self-end'>
-              <p className='text-lg leading-8 text-[#71716c]'>Refer the right business, deliver an implementation, build an integration or resell the platform. NAFS keeps the journey from introduction to commission clear.</p>
-              <Link href='/partners' className='site-arrow-link mt-5 inline-flex items-center gap-2 text-base font-semibold text-[#111] focus-visible:outline-none'>Explore partnerships <ArrowRightIcon className='size-4' /></Link>
-            </div>
-          </div>
-        </PageReveal>
-        <div className='mt-10 sm:mt-12'><PartnerGrowthScene /></div>
-      </div>
-    </section>
-
-    <section className='bg-[#0d0e12] py-20 text-white sm:py-28'>
-      <div className='mx-auto max-w-[1320px] px-4 sm:px-6 lg:px-8'>
-        <PageReveal>
-          <div className='grid gap-8 lg:grid-cols-[.72fr_1.28fr] lg:items-end'>
-            <div>
-              <p className='text-sm font-semibold uppercase tracking-[.12em] text-violet-300'>VISIBILITY & CONTROL</p>
-              <h2 className='mt-4 text-balance text-4xl font-medium tracking-[-0.05em] text-white sm:text-6xl'>Know what happened, what is running and what needs attention.</h2>
-            </div>
-            <p className='max-w-xl text-lg leading-8 text-white/68 lg:justify-self-end'>Important actions leave a clear history—from the order and stock update to delivery, payment and automation—so your team can find problems and recover faster.</p>
-          </div>
-        </PageReveal>
-        <div className='mt-10 sm:mt-12'><VisibilityConsole /></div>
-      </div>
-    </section>
-
-    <section id='contact' tabIndex={-1} aria-labelledby='contact-heading' className='scroll-mt-24 bg-[#fafaf8] py-20 outline-none sm:py-28'>
-      <div className='mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-8'>
-        <div className='grid gap-10 lg:grid-cols-[.82fr_1.18fr] lg:gap-14'>
-          <PageReveal>
-            <div className='lg:sticky lg:top-28'>
-              <p className='text-sm font-semibold uppercase tracking-[.12em] text-violet-700'>START WITH YOUR BIGGEST BOTTLENECK</p>
-              <h2 id='contact-heading' className='mt-4 text-balance text-4xl font-medium tracking-[-0.05em] text-[#111] sm:text-5xl'>Show us the part of your operation that is hardest to run today.</h2>
-              <p className='mt-6 max-w-md text-base leading-7 text-[#71716c]'>We will map the people, tools and steps involved, then recommend the smallest NAFS rollout that can make a measurable difference.</p>
-              <div className='mt-8 space-y-3'>
-                {rolloutSteps.map((step, index) => (
-                  <div key={step} className='flex items-center gap-3 rounded-2xl border border-[#e5e5e1] bg-white px-4 py-3'>
-                    <span className='grid size-8 shrink-0 place-items-center rounded-full bg-[#f2efff] font-mono text-[11px] font-semibold text-violet-700'>0{index + 1}</span>
-                    <p className='text-sm font-medium leading-6 text-[#666661]'>{step}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </PageReveal>
-          <PageReveal delay={0.08}><DemoRequestForm /></PageReveal>
-        </div>
-      </div>
-    </section>
-  </>
-)
+export function NafsLandingPage() {
+  return (
+    <>
+      <section className='m-home-hero' id='home'><div className='m-container'>
+        <div className='m-home-intro'><span className='m-eyebrow'>NAFS · Commerce operating system</span><h1>Run your commerce.<span>From one place.</span></h1><p className='m-lead'>Orders, inventory, fulfillment and payments—connected to the people doing the work. Less chasing context. A clearer next step.</p><Actions /><p className='m-hero-caption'>Start with one workflow. Connect the operation as you grow.</p></div>
+        <div className='m-hero-product'><ProductShowcase /></div>
+      </div></section>
+      <div className='m-container m-operating-strip'><strong>Built around the work after checkout.</strong><span>Orders & inventory</span><span>Warehouse & delivery</span><span>Payments & COD</span><span>Reporting & control</span></div>
+      <Section><div className='m-split'><SectionHeading label='Less disconnected work' title='Your business is connected. Your tools should be, too.' description='The hard part is rarely one task. It is keeping the next team informed, the next record accurate and the next decision clear.' /><ul className='m-pain-list'><li><h3>An order shouldn’t need three different tabs.</h3><p>Bring its customer, stock, payment and delivery context into the same operating flow.</p></li><li><h3>A stock number should have an explanation.</h3><p>Keep location, movement and committed quantities visible instead of reconciling another spreadsheet.</p></li><li><h3>A delivered parcel is not settled money.</h3><p>Keep courier collections and reconciliation connected to the original sale.</p></li></ul></div></Section>
+      <Section tone='white'><SectionHeading label='Order to outcome' title='One sale. A connected operation.' description='A typical journey through NAFS OS. Payment, stock and courier requirements still govern each step.' /><ol className='m-journey'>{journey.map(([title, detail], index) => <li key={title}><span>{String(index + 1).padStart(2, '0')}</span><h3>{title}</h3><p>{detail}</p></li>)}</ol></Section>
+      <Section><SectionHeading label='The core operation' title='Give every team the context to finish the job.' description='Start where the handoffs cost the most time. Keep the rest of the operation connected.' /><div className='m-grid m-grid-two'>{solutions.slice(0, 4).map(solution => <CardLink key={solution.id} href={`/solutions/${solution.id}`} title={solution.title} description={solution.outcome} label={solution.modules.slice(0, 2).join(' / ')} />)}</div><Link href='/solutions' className='m-text-link' style={{ marginTop: 24 }}>Explore all solutions <ArrowRightIcon className='m-arrow' aria-hidden='true' /></Link></Section>
+      <Section tone='dark'><SectionHeading label='Insight, with control' title='Find the signal. Keep people in charge.' description='Reporting and assistance belong beside the operation—not in another disconnected dashboard.' /><div className='m-intelligence-grid'><article><span className='m-eyebrow'>Understand</span><h3>Operational reporting</h3><p>Review sales, delivery, returns and payments with the relevant scope and records behind them.</p></article><article><span className='m-eyebrow'>Connect</span><h3>Campaign-to-product context</h3><p>Explore attributed order lines and product mappings. Attribution is not proof of a particular impression or an incremental sale.</p></article><article><span className='m-eyebrow'>Assist</span><h3>AI-assisted work</h3><p>Review suggestions before consequential actions. Availability and permitted workflows are verified for each rollout.</p></article></div></Section>
+      <Section><div className='m-split'><div><SectionHeading label='Keep what works' title='Your storefront can stay. Your operation can improve.' description='Review WooCommerce, Shopify and delivery connections without assuming you have to replace everything at once.' /><Link href='/integrations' className='m-text-link'>Explore connection readiness <ArrowRightIcon className='m-arrow' aria-hidden='true' /></Link></div><div className='m-connection-list'>{integrations.slice(0, 3).map(integration => <article key={integration.name}><h3>{integration.name}</h3><Readiness status={integration.status} /></article>)}</div></div></Section>
+      <Section tone='white'><SectionHeading label='Before you start' title='A few useful answers.' centered /><FAQ items={questions} /></Section>
+      <section id='contact' tabIndex={-1} aria-labelledby='contact-heading' className='m-section'><div className='m-container m-contact-grid'><div><span className='m-eyebrow'>See NAFS in action</span><h2 id='contact-heading' className='m-heading'>Start with the part that is hardest to run.</h2><p className='m-lead'>Tell us about your business. We’ll review the workflow, show the relevant product and confirm what a sensible rollout needs.</p><ol className='m-steps'><li>Discuss your operation and the tools you already use.</li><li>Walk through the relevant workflows.</li><li>Agree scope, readiness and next steps.</li></ol></div><DemoRequestForm /></div></section>
+      <div className='m-container m-partner-rail'><p>Building a commerce offering for clients?</p><div><Link href='/b2b' className='m-text-link'>Explore B2B <ArrowRightIcon className='m-arrow' aria-hidden='true' /></Link><Link href='/partners' className='m-text-link'>Partner with NAFS <ArrowRightIcon className='m-arrow' aria-hidden='true' /></Link></div></div>
+    </>
+  )
+}
