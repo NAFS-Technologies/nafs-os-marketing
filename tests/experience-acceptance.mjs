@@ -60,6 +60,7 @@ try {
   await Promise.all(responses)
 
   const totalScriptBytes = sourceBytes.reduce((sum, size) => sum + size, 0)
+
   const navigation = await performancePage.evaluate(() => {
     const entry = performance.getEntriesByType('navigation')[0]
 

@@ -54,11 +54,13 @@ try {
   await page.getByRole('button', { name: 'Clear search' }).click()
   assert.ok(await page.locator('[data-resource-library] .m-card').count() >= 5)
 
-  await page.goto(`${baseUrl}/?utm_source=browser-test`)
-  await page.evaluate(() => {
-    window.dataLayer = []
-    document.querySelector('[data-cta-name="header"]').dispatchEvent(new MouseEvent('click', { bubbles: true }))
-  })
+  await page.goto(`${baseUrl}/?utm_source=browser-test`, { waitUntil: 'networkidle' })
+  await page.evaluate(() => { window.dataLayer = [] })
+  // Use a real cancelable click so Next can own navigation. A synthetic,
+  // non-cancelable anchor event reloads the document and destroys the test context.
+  await page.locator('[data-cta-name="header"]').click()
+  await expect(page).toHaveURL(`${baseUrl}/#contact`)
+  await page.waitForLoadState('networkidle')
   assert.equal(await page.evaluate(() => window.dataLayer.length), 0)
   await page.getByText('Analytics preferences', { exact: true }).click()
   await page.getByLabel('Allow optional analytics').check()
