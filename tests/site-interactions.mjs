@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { mkdir, writeFile } from 'node:fs/promises'
 
 import { chromium, expect } from '@playwright/test'
 
@@ -6,6 +7,23 @@ const baseUrl = process.env.SITE_BASE_URL ?? 'http://127.0.0.1:3100'
 const browser = await chromium.launch({ headless: true })
 const context = await browser.newContext({ viewport: { width: 390, height: 900 }, locale: 'en-GB', timezoneId: 'Asia/Dhaka', reducedMotion: 'reduce' })
 const page = await context.newPage()
+const deliveryEvidence = []
+
+await context.tracing.start({ screenshots: true, snapshots: true, sources: false })
+
+async function submitAndObserve(form, expectedStatus) {
+  const [response] = await Promise.all([
+    page.waitForResponse(result => new URL(result.url()).pathname === '/api/demo-request' && result.request().method() === 'POST'),
+    form.getByRole('button', { name: 'Plan my walkthrough' }).click()
+  ])
+
+  const payload = await response.json()
+  const evidence = { status: response.status(), origin: new URL(response.url()).origin, fromServiceWorker: response.fromServiceWorker(), contentType: response.headers()['content-type'], message: payload.message, accepted: payload.accepted }
+
+  deliveryEvidence.push(evidence)
+  console.log('Synthetic browser delivery response:', JSON.stringify(evidence))
+  assert.equal(response.status(), expectedStatus, 'browser delivery must match the configured receiver outcome')
+}
 
 try {
   await page.goto(baseUrl)
@@ -56,8 +74,8 @@ try {
 
   await page.goto(`${baseUrl}/?utm_source=browser-test`, { waitUntil: 'networkidle' })
   await page.evaluate(() => { window.dataLayer = [] })
-  // Use a real cancelable click so Next can own navigation. A synthetic,
-  // non-cancelable anchor event reloads the document and destroys the test context.
+
+  // A real cancelable click lets Next own navigation without a native reload.
   await page.locator('[data-cta-name="header"]').click()
   await expect(page).toHaveURL(`${baseUrl}/#contact`)
   await page.waitForLoadState('networkidle')
@@ -75,12 +93,12 @@ try {
   await form.getByLabel('What would you most like to fix?').selectOption('orders-delivery')
 
   if (process.env.TEST_LEAD_SINK_URL) {
-    await form.getByRole('button', { name: 'Plan my walkthrough' }).click()
+    await submitAndObserve(form, 502)
     await expect(form.getByRole('status')).toContainText('could not confirm delivery')
     await expect(form.getByLabel('Your name', { exact: true })).toHaveValue('Browser Fixture')
     await expect(form.getByLabel('Business name', { exact: true })).toHaveValue('Webhook failure fixture')
     await form.getByLabel('Business name', { exact: true }).fill('Successful browser fixture')
-    await form.getByRole('button', { name: 'Plan my walkthrough' }).click()
+    await submitAndObserve(form, 202)
     await expect(form.getByRole('status')).toContainText('Your request was delivered')
     await expect(form.getByRole('button', { name: 'Request received' })).toBeDisabled()
 
@@ -104,6 +122,9 @@ try {
   assert.ok((await page.locator('.m-header-signin').getAttribute('href')).startsWith(process.env.NEXT_PUBLIC_ERP_URL || 'https://app.nafs.tech'))
   console.log('Navigation, preview controls, directory recovery, consent, actual API delivery and metadata checks passed.')
 } finally {
+  await mkdir('test-results', { recursive: true })
+  await writeFile('test-results/lead-browser-evidence.json', JSON.stringify(deliveryEvidence, null, 2))
+  await context.tracing.stop({ path: 'test-results/interaction-trace.zip' })
   await context.close()
   await browser.close()
 }
