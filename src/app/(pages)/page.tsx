@@ -1,68 +1,24 @@
 import type { Metadata } from 'next'
 
 import { NafsLandingPage } from '@/components/landing/nafs-landing-page'
-
-const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://app.nafs.tech'
+import { absoluteUrl, siteConfig } from '@/lib/site-config'
 
 export const metadata: Metadata = {
-  alternates: { canonical: '/' }
+  title: 'NAFS — Run your commerce from one place',
+  description: 'Connect orders, inventory, fulfillment, delivery and payments with NAFS OS. Explore the product and plan a guided rollout.',
+  alternates: { canonical: '/' },
+  openGraph: { url: absoluteUrl('/') }
 }
 
 const jsonLd = {
   '@context': 'https://schema.org',
   '@graph': [
-    {
-      '@type': 'Organization',
-      '@id': `${appUrl}/#organization`,
-      name: 'NAFS Technologies',
-      url: appUrl,
-      areaServed: { '@type': 'Country', name: 'Bangladesh' }
-    },
-    {
-      '@type': 'WebSite',
-      '@id': `${appUrl}/#website`,
-      name: 'NAFS',
-      description: 'A commerce platform for running operations, connecting business tools, automating work and growing through B2B and partner programs.',
-      url: appUrl,
-      inLanguage: 'en',
-      publisher: { '@id': `${appUrl}/#organization` }
-    },
-    {
-      '@type': 'SoftwareApplication',
-      '@id': `${appUrl}/#software`,
-      name: 'NAFS',
-      applicationCategory: 'BusinessApplication',
-      operatingSystem: 'Web',
-      description: 'Run products, orders, customers, inventory, fulfillment, delivery, payments and reporting in one place. Connect existing tools, automate routine work, launch branded client platforms and manage partner growth.',
-      featureList: [
-        'Products, pricing, discounts and checkout',
-        'Orders, customers and sales channels',
-        'Inventory and warehouse operations',
-        'Fulfillment, returns and delivery management',
-        'Payments and COD settlement follow-up',
-        'Purchasing, suppliers and replenishment',
-        'Analytics, reports and activity history',
-        'NAFS Flow business automation',
-        'NAFS Mobile for operational tasks',
-        'NAFS Storefront and Shopping customer channels',
-        'Connections to external apps and APIs through Nango',
-        'Branded B2B platforms with plans, subscriptions and custom domains',
-        'Referral links, partner programs, attribution and commissions'
-      ],
-      areaServed: { '@type': 'Country', name: 'Bangladesh' },
-      provider: { '@id': `${appUrl}/#organization` }
-    }
+    { '@type': 'Organization', '@id': absoluteUrl('/#organization'), name: 'NAFS', url: siteConfig.siteUrl, email: siteConfig.contactEmail },
+    { '@type': 'WebSite', '@id': absoluteUrl('/#website'), name: 'NAFS', url: siteConfig.siteUrl },
+    { '@type': 'SoftwareApplication', name: 'NAFS OS', applicationCategory: 'BusinessApplication', operatingSystem: 'Web', url: absoluteUrl('/products/os'), description: 'A commerce operations workspace for orders, inventory, fulfillment, payments and reporting.' }
   ]
 }
 
-const Home = () => (
-  <>
-    <NafsLandingPage />
-    <script
-      type='application/ld+json'
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
-    />
-  </>
-)
-
-export default Home
+export default function Home() {
+  return <><script type='application/ld+json' dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }} /><NafsLandingPage /></>
+}
