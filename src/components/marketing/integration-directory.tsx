@@ -17,6 +17,7 @@ export function IntegrationDirectory({ items }: { items: readonly Integration[] 
   const [status, setStatus] = useState('All')
   const categories = ['All', ...new Set(items.map(item => item.category))]
   const filtered = items.filter(item => (category === 'All' || item.category === category) && (status === 'All' || item.status === status) && `${item.name} ${item.detail}`.toLowerCase().includes(query.trim().toLowerCase()))
+
   const reset = () => {
     setQuery('')
     setCategory('All')
