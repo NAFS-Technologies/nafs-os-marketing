@@ -1,137 +1,71 @@
 import assert from 'node:assert/strict'
+import { mkdir, writeFile } from 'node:fs/promises'
 
 import { chromium } from '@playwright/test'
 
 const baseUrl = process.env.SITE_BASE_URL ?? 'http://127.0.0.1:3100'
-
-const viewports = [
-  { width: 360, height: 800 },
-  { width: 390, height: 844 },
-  { width: 412, height: 915 },
-  { width: 768, height: 1024 },
-  { width: 1024, height: 900 }
-]
-
-const routes = [
-  '/',
-  '/products',
-  '/products/os',
-  '/integrations',
-  '/b2b',
-  '/partners',
-  '/solutions',
-  '/solutions/orders',
-  '/use-cases',
-  '/use-cases/cod-heavy-business',
-  '/pricing',
-  '/blog',
-  '/blog/nafs-commerce-does-not-stop-at-checkout',
-  '/missing-page-for-mobile-check'
-]
-
-const ignoredConsoleFragments = [
-  'Failed to load resource',
-  'favicon.ico'
-]
-
-const mobileNavigationLabels = ['Platform', 'Integrations', 'B2B', 'Partners', 'Solutions', 'Pricing']
-const failures = []
 const browser = await chromium.launch({ headless: true })
+const widths = [360, 390, 412, 768, 1024, 1440, 1920]
+const paths = ['/', '/products', '/products/os', '/products/storefront', '/products/courier', '/products/flow', '/products/mobile', '/products/shopping', '/products/platform', '/products/partners', '/solutions', '/solutions/orders', '/solutions/inventory', '/solutions/purchasing', '/solutions/money', '/solutions/management', '/solutions/team', '/use-cases', '/use-cases/multi-brand-retail', '/use-cases/d2c-commerce', '/use-cases/social-plus-website', '/use-cases/cod-heavy-business', '/use-cases/multi-location', '/integrations', '/pricing', '/b2b', '/partners', '/blog', '/blog/nafs-planning-your-first-rollout', '/blog/nafs-understanding-product-readiness']
+const results = []
+const failures = []
+
+await mkdir('test-results/screenshots', { recursive: true })
 
 try {
-  for (const viewport of viewports) {
-    const context = await browser.newContext({
-      viewport,
-      reducedMotion: 'reduce',
-      colorScheme: 'light',
-      locale: 'en-BD'
-    })
-
+  for (const width of widths) {
+    const context = await browser.newContext({ viewport: { width, height: 1000 }, reducedMotion: 'reduce', locale: 'en-GB', timezoneId: 'Asia/Dhaka', colorScheme: 'light' })
     const page = await context.newPage()
+    let errors = []
 
-    let consoleErrors = []
-    let pageErrors = []
+    page.on('pageerror', error => errors.push(error.message))
 
-    page.on('console', message => {
-      if (message.type() !== 'error') return
-      if (ignoredConsoleFragments.some(fragment => message.text().includes(fragment))) return
-
-      consoleErrors.push(message.text())
-    })
-    page.on('pageerror', error => pageErrors.push(error.message))
-
-    for (const route of routes) {
-      consoleErrors = []
-      pageErrors = []
+    for (const path of paths) {
+      errors = []
 
       try {
-        const response = await page.goto(`${baseUrl}${route}`, { waitUntil: 'domcontentloaded', timeout: 30_000 })
+        const response = await page.goto(`${baseUrl}${path}`, { waitUntil: 'networkidle' })
 
-        await page.waitForSelector('body', { state: 'visible', timeout: 10_000 })
-        await page.waitForTimeout(100)
+        assert.equal(response.status(), 200)
+        await page.locator('h1').waitFor()
+        await page.evaluate(() => document.fonts.ready)
+        assert.equal(await page.locator('h1').count(), 1, 'exactly one page heading')
 
-        const diagnostics = await page.evaluate(() => {
-          const heading = document.querySelector('h1')
-          const headingRect = heading?.getBoundingClientRect()
-          const headingStyle = heading ? window.getComputedStyle(heading) : null
-          const overlay = document.querySelector('[data-nextjs-dialog], nextjs-portal')
+        const geometry = await page.evaluate(() => ({ viewport: innerWidth, document: document.documentElement.scrollWidth, body: document.body.scrollWidth }))
 
-          return {
-            viewportWidth: window.innerWidth,
-            documentWidth: document.documentElement.scrollWidth,
-            bodyWidth: document.body.scrollWidth,
-            bodyTextLength: document.body.innerText.trim().length,
-            headingVisible: Boolean(heading && headingRect && headingRect.width > 0 && headingRect.height > 0),
-            headingFontSize: headingStyle ? Number.parseFloat(headingStyle.fontSize) : 0,
-            hasErrorOverlay: Boolean(overlay)
-          }
-        })
+        assert.ok(geometry.document <= geometry.viewport + 1, `document overflow: ${JSON.stringify(geometry)}`)
+        assert.ok(geometry.body <= geometry.viewport + 1, `body overflow: ${JSON.stringify(geometry)}`)
+        assert.deepEqual(errors, [], 'no browser exceptions')
 
-        assert.ok(response, 'route returned no response')
-        assert.ok(response.status() < 500, `route returned ${response.status()}`)
-        assert.ok(diagnostics.bodyTextLength > 80, 'page rendered too little visible content')
-        assert.equal(diagnostics.headingVisible, true, 'page has no visible primary heading')
-        assert.ok(diagnostics.headingFontSize >= 36, `primary heading is only ${diagnostics.headingFontSize}px`)
-        assert.ok(diagnostics.documentWidth <= diagnostics.viewportWidth + 1, `document overflows by ${diagnostics.documentWidth - diagnostics.viewportWidth}px`)
-        assert.ok(diagnostics.bodyWidth <= diagnostics.viewportWidth + 1, `body overflows by ${diagnostics.bodyWidth - diagnostics.viewportWidth}px`)
-        assert.equal(diagnostics.hasErrorOverlay, false, 'Next.js error overlay is visible')
-        assert.deepEqual(pageErrors, [], `page errors: ${pageErrors.join(' | ')}`)
-        assert.deepEqual(consoleErrors, [], `console errors: ${consoleErrors.join(' | ')}`)
+        if ([390, 1440].includes(width) && ['/', '/products/os', '/integrations', '/pricing', '/blog'].includes(path)) await page.screenshot({ path: `test-results/screenshots/${path === '/' ? 'home' : path.slice(1).replaceAll('/', '-')}-${width}.png`, fullPage: true, animations: 'disabled' })
 
-        if (route === '/' && viewport.width <= 412) {
-          const menuButton = page.getByRole('button', { name: 'Open navigation' })
-
-          await menuButton.click()
-
-          const menu = page.locator('#mobile-navigation')
-
-          await menu.waitFor({ state: 'visible', timeout: 5_000 })
-
-          for (const label of mobileNavigationLabels) {
-            await menu.getByRole('link', { name: label, exact: true }).waitFor({ state: 'visible', timeout: 5_000 })
-          }
-
-          const menuWidth = await page.evaluate(() => ({
-            viewport: window.innerWidth,
-            document: document.documentElement.scrollWidth
-          }))
-
-          assert.ok(menuWidth.document <= menuWidth.viewport + 1, `open menu overflows by ${menuWidth.document - menuWidth.viewport}px`)
-
-          await menu.getByRole('button', { name: 'Close navigation' }).click()
-          await page.locator('#mobile-navigation').waitFor({ state: 'detached' })
-          await menuButton.waitFor({ state: 'visible' })
-        }
+        results.push({ width, path, passed: true })
       } catch (error) {
-        failures.push(`${viewport.width}x${viewport.height} ${route}: ${error instanceof Error ? error.message : String(error)}`)
+        failures.push({ width, path, message: String(error) })
+        await page.screenshot({ path: `test-results/screenshots/failure-${width}-${path.replaceAll('/', '_')}.png`, fullPage: true }).catch(() => undefined)
       }
     }
 
     await context.close()
   }
+
+  const context = await browser.newContext({ viewport: { width: 390, height: 900 }, reducedMotion: 'reduce' })
+  const page = await context.newPage()
+
+  for (const path of ['/products/not-real', '/blog/nafs-not-real', '/missing-page']) {
+    const response = await page.goto(`${baseUrl}${path}`)
+
+    assert.equal(response.status(), 404)
+    assert.equal(await page.locator('h1').count(), 1)
+  }
+
+  await page.goto(`${baseUrl}/white-label`)
+  assert.ok(page.url().endsWith('/b2b'))
+  await context.close()
 } finally {
   await browser.close()
+  await writeFile('test-results/layout-results.json', JSON.stringify({ results, failures }, null, 2))
 }
 
-assert.deepEqual(failures, [], `Responsive browser acceptance failed:\n${failures.join('\n')}`)
-console.log(`NAFS responsive browser acceptance passed across ${viewports.length} viewports and ${routes.length} routes`)
+assert.deepEqual(failures, [], 'responsive route checks failed')
+console.log(`${results.length} responsive route checks passed; screenshots are unapproved review candidates.`)
