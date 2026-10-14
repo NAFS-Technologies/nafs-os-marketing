@@ -8,6 +8,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   if (!siteConfig.indexable) return []
 
   const posts = await getPosts()
+
   const paths = [
     '', '/products', '/integrations', '/b2b', '/partners', '/solutions', '/use-cases', '/pricing', '/blog',
     ...productEcosystem.map(product => `/products/${product.slug}`),
