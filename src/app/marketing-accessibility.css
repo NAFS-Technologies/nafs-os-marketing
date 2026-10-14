@@ -1,0 +1,14 @@
+/* Let increased text size determine header height instead of covering the page. */
+.marketing-shell .m-header { position: sticky; top: 0; }
+.marketing-shell .m-header-inner { flex-wrap: wrap; padding-block: 12px; }
+.marketing-shell .m-header-actions { flex-wrap: wrap; }
+.marketing-shell .m-page-hero { padding-top: clamp(52px, 7vw, 92px); }
+.marketing-shell .m-home-hero { padding-top: clamp(56px, 7vw, 96px); }
+.marketing-shell .m-preview-search input { height: auto; min-height: 3em; padding-block: .65em; }
+.marketing-shell .m-directory-toolbar input, .marketing-shell .m-directory-toolbar select { height: auto; min-height: 3em; padding-block: .65em; }
+.marketing-shell .m-mobile-dialog { overscroll-behavior: contain; }
+.marketing-shell .m-preview-detail { scroll-margin-top: 100px; }
+@media (max-width: 419px) {
+  .marketing-shell .m-header-inner { column-gap: 10px; }
+  .marketing-shell .m-header-actions { gap: 8px; }
+}

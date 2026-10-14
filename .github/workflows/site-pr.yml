@@ -14,41 +14,86 @@ jobs:
   site:
     name: NAFS site checks
     if: github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: nafs-os-build
+    runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      NEXT_PUBLIC_SITE_URL: https://marketing.example
+      NEXT_PUBLIC_APP_URL: https://app.nafs.tech
+      NEXT_PUBLIC_ERP_URL: https://app.nafs.tech
+      NEXT_PUBLIC_SIGN_IN_URL: https://app.nafs.tech/auth/sign-in
+      NEXT_PUBLIC_CONTACT_EMAIL: hello@example.com
+      NEXT_PUBLIC_INDEXABLE: '1'
+      NEXT_PUBLIC_TRIAL_ENABLED: '0'
+      NEXT_TELEMETRY_DISABLED: '1'
+      HUSKY: '0'
     steps:
       - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
-
+      - name: Set up Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24.14.1
       - name: Set up Bun
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
         with:
           bun-version: 1.3.14
-
       - name: Install frozen dependencies
-        env:
-          BUN_INSTALL_CACHE_DIR: /home/runner/.bun/nafs-ci-install-cache/1.3.14
-          BUN_INSTALL_GLOBAL_STORE: '0'
-          HUSKY: '0'
-        run: |
-          mkdir -p "$BUN_INSTALL_CACHE_DIR"
-          timeout --signal=TERM --kill-after=30s 240s bun install --frozen-lockfile --linker isolated --prefer-offline
-
-      - name: Marketing and lead-delivery contracts
-        run: bun run test
-
+        id: install
+        run: bun install --frozen-lockfile
+      - name: Content and delivery regression tests
+        id: tests
+        continue-on-error: true
+        run: bun run test:content && bun run test
       - name: Typecheck
+        id: types
+        continue-on-error: true
         run: bun run typecheck
-
       - name: Lint
+        id: lint
+        continue-on-error: true
         run: bun run lint
-
       - name: Production build
-        env:
-          NEXT_PUBLIC_APP_URL: https://app.nafs.tech
-          NEXT_PUBLIC_SIGN_IN_URL: https://app.nafs.tech/auth/sign-in
-          NEXT_PUBLIC_DEMO_URL: mailto:hello@nafs.com.bd?subject=NAFS%20OS%20Demo
-          NEXT_PUBLIC_CONTACT_EMAIL: hello@nafs.com.bd
+        id: build
+        continue-on-error: true
         run: bun run build
+      - name: Install browser
+        if: steps.build.outcome == 'success'
+        run: bun x playwright install --with-deps chromium
+      - name: Browser behavior and screenshot candidates
+        id: browser
+        if: steps.build.outcome == 'success'
+        continue-on-error: true
+        run: bun run test:browser:ci
+      - name: Collect lint correction patch for review
+        if: always() && steps.install.outcome == 'success' && steps.lint.outcome == 'failure'
+        run: |
+          mkdir -p test-results
+          bun run lint:fix || true
+          git diff -- src tests scripts > test-results/lint-corrections.patch
+          cat test-results/lint-corrections.patch
+      - name: Upload browser evidence
+        if: always() && steps.install.outcome == 'success'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: marketing-review-${{ github.event.pull_request.number }}
+          path: test-results/
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Require all acceptance gates
+        if: always()
+        env:
+          INSTALL: ${{ steps.install.outcome }}
+          TESTS: ${{ steps.tests.outcome }}
+          TYPES: ${{ steps.types.outcome }}
+          LINT: ${{ steps.lint.outcome }}
+          BUILD: ${{ steps.build.outcome }}
+          BROWSER: ${{ steps.browser.outcome }}
+        run: |
+          test "$INSTALL" = success
+          test "$TESTS" = success
+          test "$TYPES" = success
+          test "$LINT" = success
+          test "$BUILD" = success
+          test "$BROWSER" = success

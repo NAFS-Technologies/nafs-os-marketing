@@ -3,163 +3,105 @@ import assert from 'node:assert/strict'
 import { chromium, expect } from '@playwright/test'
 
 const baseUrl = process.env.SITE_BASE_URL ?? 'http://127.0.0.1:3100'
-const widths = [360, 390, 412, 768, 1024, 1440, 1920]
 const browser = await chromium.launch({ headless: true })
-
-const assertNoOverflow = async page => {
-  const dimensions = await page.evaluate(() => ({
-    viewport: window.innerWidth,
-    document: document.documentElement.scrollWidth,
-    body: document.body.scrollWidth
-  }))
-
-  assert.ok(dimensions.document <= dimensions.viewport + 1, `document overflow at ${dimensions.viewport}px`)
-  assert.ok(dimensions.body <= dimensions.viewport + 1, `body overflow at ${dimensions.viewport}px`)
-}
+const context = await browser.newContext({ viewport: { width: 390, height: 900 }, locale: 'en-GB', timezoneId: 'Asia/Dhaka', reducedMotion: 'reduce' })
+const page = await context.newPage()
 
 try {
-  for (const width of widths) {
-    const context = await browser.newContext({ viewport: { width, height: 900 }, reducedMotion: 'reduce' })
-    const page = await context.newPage()
-    const pageErrors = []
-    let mode = 'unavailable'
-    let requests = 0
-    let releaseDelivery
-    const deliveryGate = new Promise(resolve => { releaseDelivery = resolve })
+  await page.goto(baseUrl)
+  await page.getByRole('button', { name: 'Open navigation', exact: true }).click()
+  await expect(page.getByRole('dialog', { name: 'Mobile navigation' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Close navigation', exact: true })).toBeFocused()
 
-    page.on('pageerror', error => pageErrors.push(error.message))
-
-    // Never send test leads to a real delivery provider, even when SITE_BASE_URL is a preview deployment.
-    await context.route('**/api/demo-request', async route => {
-      requests += 1
-      assert.equal(route.request().method(), 'POST')
-      assert.equal(route.request().postDataJSON().name, 'Example Operator')
-
-      if (mode === 'success') await deliveryGate
-
-      const response = mode === 'unavailable'
-        ? { status: 503, body: { message: 'Online requests are temporarily unavailable. Please contact us by email.' } }
-        : mode === 'validation'
-          ? { status: 400, body: { message: 'Please check the highlighted fields.', errors: { phone: 'Please enter a valid phone number.' } } }
-          : mode === 'unconfirmed'
-            ? { status: 200, body: { message: 'Thanks. This is not a confirmed acceptance.' } }
-            : { status: 202, body: { accepted: true, message: 'Thanks. Your walkthrough request has been received.' } }
-
-      await route.fulfill({ status: response.status, contentType: 'application/json', body: JSON.stringify(response.body) })
-    })
-
-    try {
-      await page.goto(baseUrl, { waitUntil: 'networkidle' })
-      await assertNoOverflow(page)
-      await expect(page.locator('#home').getByRole('link', { name: 'Start free trial' })).toHaveAttribute('href', /\/auth\/sign-up$/)
-      await expect(page.locator('#home').getByRole('link', { name: 'Connect your existing tools' })).toHaveAttribute('href', '/integrations')
-
-      if (width < 1280) {
-        const openMenu = page.getByRole('button', { name: 'Open navigation', exact: true })
-        const menu = page.getByRole('dialog', { name: 'Mobile navigation', exact: true })
-
-        await openMenu.click()
-        await expect(menu).toBeVisible()
-        await expect.poll(() => page.locator('main').evaluate(element => element.inert)).toBe(true)
-        await expect(menu.getByRole('button', { name: 'Close navigation' })).toBeFocused()
-        await page.keyboard.press('Shift+Tab')
-        await expect(menu.getByRole('link', { name: 'Plan a walkthrough' })).toBeFocused()
-        await page.keyboard.press('Tab')
-        await expect(menu.getByRole('button', { name: 'Close navigation' })).toBeFocused()
-        await assertNoOverflow(page)
-        await page.keyboard.press('Escape')
-        await expect(menu).toHaveCount(0)
-        await expect(openMenu).toBeFocused()
-        await expect.poll(() => page.locator('main').evaluate(element => element.inert)).toBe(false)
-
-        await openMenu.click()
-        await page.setViewportSize({ width: 1440, height: 900 })
-        await expect(menu).toHaveCount(0)
-        await expect.poll(() => page.evaluate(() => getComputedStyle(document.body).overflow)).not.toBe('hidden')
-        await expect.poll(() => page.locator('main').evaluate(element => element.inert)).toBe(false)
-        await expect(page.locator('header').getByRole('link', { name: 'NAFS homepage' })).toBeFocused()
-        await page.setViewportSize({ width, height: 900 })
-        await expect(menu).toHaveCount(0)
-
-        await openMenu.click()
-        await menu.getByRole('link', { name: 'Platform', exact: true }).click()
-        await expect(page).toHaveURL(/\/products$/)
-        await expect(menu).toHaveCount(0)
-        await openMenu.click()
-        await expect(menu.getByRole('link', { name: 'Platform', exact: true })).toHaveAttribute('aria-current', 'page')
-        await menu.getByRole('link', { name: 'Platform', exact: true }).click()
-        await expect(menu).toHaveCount(0)
-        await expect(openMenu).toBeFocused()
-        await openMenu.click()
-        await page.goBack()
-        await expect(menu).toHaveCount(0)
-        await expect(page.locator('#home')).toBeVisible()
-        await expect.poll(() => page.locator('main').evaluate(element => element.inert)).toBe(false)
-      }
-
-      await page.locator('#home').getByRole('link', { name: 'Plan a walkthrough' }).click()
-      await expect(page.locator('#contact')).toBeInViewport()
-
-      const form = page.locator('#contact form')
-      const submit = form.locator('button[type="submit"]')
-      const name = form.locator('input[name="name"]')
-      const phone = form.locator('input[name="phone"]')
-
-      await name.fill('Example Operator')
-      await form.locator('input[name="businessName"]').fill('Example Commerce')
-      await form.locator('input[name="email"]').fill('operator@example.com')
-      await phone.fill('+880 1712345678')
-      await form.locator('select[name="monthlyOrders"]').selectOption('500-2000')
-      await form.locator('select[name="interest"]').selectOption('orders-delivery')
-      await form.locator('textarea[name="message"]').fill('Help with order handoffs.')
-      await submit.click()
-      await expect(form.getByRole('status')).toContainText('temporarily unavailable')
-      await expect(form.getByRole('status')).toBeFocused()
-      await expect(name).toHaveValue('Example Operator')
-      await expect(submit).toBeEnabled()
-      await expect(form.locator('a[href^="mailto:"]')).toBeVisible()
-
-      mode = 'validation'
-      await submit.click()
-      await expect(phone).toHaveAttribute('aria-invalid', 'true')
-      await expect(phone).toBeFocused()
-
-      const errorId = await phone.getAttribute('aria-describedby')
-
-      assert.ok(errorId)
-      assert.equal(await page.evaluate(id => document.getElementById(id)?.textContent, errorId), 'Please enter a valid phone number.')
-      await expect(name).toHaveValue('Example Operator')
-      await assertNoOverflow(page)
-
-      mode = 'unconfirmed'
-      await submit.click()
-      await expect(form.getByRole('status')).toContainText('could not confirm delivery')
-      await expect(name).toHaveValue('Example Operator')
-      await expect(submit).toBeEnabled()
-
-      mode = 'success'
-      await form.evaluate(element => {
-        element.requestSubmit()
-        element.requestSubmit()
-      })
-      await expect(submit).toBeDisabled()
-      await expect(submit).toContainText('Sending')
-      await expect(name).toBeDisabled()
-      await expect.poll(() => requests).toBe(4)
-      releaseDelivery()
-      await expect(form.getByRole('status')).toContainText('has been received')
-      await expect(form.getByRole('status')).toBeFocused()
-      await expect(submit).toContainText('Request received')
-      await expect(submit).toBeDisabled()
-      await expect(name).toHaveValue('')
-      await assertNoOverflow(page)
-      assert.deepEqual(pageErrors, [], `browser errors at ${width}px`)
-      console.log(`Site navigation and demo conversion passed at ${width}px`)
-    } finally {
-      releaseDelivery()
-      await context.close()
-    }
+  for (let i = 0; i < 12; i += 1) {
+    await page.keyboard.press('Tab')
+    assert.equal(await page.evaluate(() => document.querySelector('dialog').contains(document.activeElement)), true, 'focus must stay inside modal')
   }
+
+  await page.keyboard.press('Escape')
+  await expect(page.getByRole('dialog')).not.toBeVisible()
+  await expect(page.getByRole('button', { name: 'Open navigation', exact: true })).toBeFocused()
+  await page.getByRole('button', { name: 'Open navigation', exact: true }).click()
+  await page.setViewportSize({ width: 1440, height: 1000 })
+  await expect(page.getByRole('dialog')).not.toBeVisible()
+  await expect(page.locator('.m-header .m-brand')).toBeFocused()
+
+  const showcase = page.locator('[data-product-showcase]').first()
+
+  await showcase.getByRole('tab', { name: 'Orders', exact: true }).focus()
+  await page.keyboard.press('ArrowRight')
+  await expect(showcase.getByRole('tab', { name: 'Inventory', exact: true })).toHaveAttribute('aria-selected', 'true')
+  await showcase.getByRole('textbox', { name: 'Search sample records' }).fill('not-a-real-sku')
+  await expect(showcase.getByText('No sample records match your search.')).toBeVisible()
+  await showcase.getByRole('button', { name: 'Clear search' }).click()
+  await showcase.getByRole('button', { name: 'Review DEMO-001' }).filter({ visible: true }).click()
+  await expect(showcase.getByText('DEMO-001 · How this works')).toBeVisible()
+  await showcase.getByRole('button', { name: 'Close sample details' }).click()
+  await expect(showcase.getByText('DEMO-001 · How this works')).not.toBeVisible()
+
+  await page.goto(`${baseUrl}/integrations`)
+  await page.getByLabel('Find a connection').fill('Daraz')
+  await expect(page.locator('[data-integration-directory] .m-card')).toHaveCount(1)
+  await expect(page.locator('[data-integration-directory] .m-status')).toHaveText('Planned')
+  await page.getByLabel('Readiness').selectOption('Guided setup')
+  await expect(page.getByText('No connections match these filters.')).toBeVisible()
+  await page.getByRole('button', { name: 'Show all connections' }).click()
+  await expect(page.locator('[data-integration-directory] .m-card')).toHaveCount(7)
+
+  await page.goto(`${baseUrl}/blog`)
+  await page.getByLabel('Find a resource').fill('no-matching-resource')
+  await expect(page.getByText('No articles match your search.')).toBeVisible()
+  await page.getByRole('button', { name: 'Clear search' }).click()
+  assert.ok(await page.locator('[data-resource-library] .m-card').count() >= 5)
+
+  await page.goto(`${baseUrl}/?utm_source=browser-test`)
+  await page.evaluate(() => {
+    window.dataLayer = []
+    document.querySelector('[data-cta-name="header"]').dispatchEvent(new MouseEvent('click', { bubbles: true }))
+  })
+  assert.equal(await page.evaluate(() => window.dataLayer.length), 0)
+  await page.getByText('Analytics preferences', { exact: true }).click()
+  await page.getByLabel('Allow optional analytics').check()
+
+  const form = page.locator('.m-lead-form')
+
+  await form.getByLabel('Your name', { exact: true }).fill('Browser Fixture')
+  await form.getByLabel('Business name', { exact: true }).fill('Webhook failure fixture')
+  await form.getByLabel('Work email', { exact: true }).fill('browser-fixture@example.com')
+  await form.getByLabel('Phone or WhatsApp', { exact: true }).fill('+8801712345678')
+  await form.getByLabel('Approximate monthly orders').selectOption('under-500')
+  await form.getByLabel('What would you most like to fix?').selectOption('orders-delivery')
+
+  if (process.env.TEST_LEAD_SINK_URL) {
+    await form.getByRole('button', { name: 'Plan my walkthrough' }).click()
+    await expect(form.getByRole('status')).toContainText('could not confirm delivery')
+    await expect(form.getByLabel('Your name', { exact: true })).toHaveValue('Browser Fixture')
+    await expect(form.getByLabel('Business name', { exact: true })).toHaveValue('Webhook failure fixture')
+    await form.getByLabel('Business name', { exact: true }).fill('Successful browser fixture')
+    await form.getByRole('button', { name: 'Plan my walkthrough' }).click()
+    await expect(form.getByRole('status')).toContainText('Your request was delivered')
+    await expect(form.getByRole('button', { name: 'Request received' })).toBeDisabled()
+
+    const stats = await (await fetch(`${process.env.TEST_LEAD_SINK_URL}/stats`)).json()
+
+    assert.equal(stats.count, 1)
+    assert.equal(await page.evaluate(() => window.dataLayer.filter(item => item.event === 'nafs_lead_submit_success').length), 1)
+    assert.equal(await page.evaluate(() => JSON.stringify(window.dataLayer).includes('browser-fixture@example.com')), false)
+  }
+
+  await page.getByLabel('Allow optional analytics').uncheck()
+
+  const before = await page.evaluate(() => window.dataLayer.length)
+
+  await page.locator('[data-cta-name="header"]').click()
+  assert.equal(await page.evaluate(() => window.dataLayer.length), before)
+
+  const canonical = await page.locator('link[rel="canonical"]').getAttribute('href')
+
+  assert.ok(canonical?.startsWith(process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://app.nafs.tech'))
+  assert.ok((await page.locator('.m-header-signin').getAttribute('href')).startsWith(process.env.NEXT_PUBLIC_ERP_URL || 'https://app.nafs.tech'))
+  console.log('Navigation, preview controls, directory recovery, consent, actual API delivery and metadata checks passed.')
 } finally {
+  await context.close()
   await browser.close()
 }

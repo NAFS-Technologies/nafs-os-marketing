@@ -1,0 +1,24 @@
+.m-lead-form { min-width: 0; padding: clamp(24px, 4vw, 40px); border: 1px solid var(--m-line); background: #fff; border-radius: 20px; box-shadow: 0 24px 70px -40px #42325035; }
+.m-lead-form h3 { font-size: 28px; font-weight: 550; line-height: 1.25; letter-spacing: -.035em; }
+.m-form-intro { color: var(--m-muted); font-size: 15px; line-height: 1.8; margin-top: 16px; }
+.m-lead-form fieldset { min-width: 0; margin: 20px 0 0; padding: 0; border: 0; }
+.m-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 18px; }
+.m-lead-form label { display: block; min-width: 0; margin-top: 20px; font-size: 14px; line-height: 1.6; font-weight: 600; }
+.m-lead-form input, .m-lead-form select, .m-lead-form textarea { display: block; width: 100%; min-width: 0; margin-top: 8px; padding: 12px 14px; border: 1px solid #dad5e2; background: #fff; color: var(--m-ink); border-radius: 8px; min-height: 48px; font-size: 16px; line-height: 1.5; font-weight: 400; }
+.m-lead-form textarea { resize: vertical; }
+.m-lead-form [aria-invalid='true'] { border-color: #aa3434; }
+.m-field-error { display: block; margin-top: 7px; color: #a12e2e; font-size: 13px; line-height: 1.6; font-weight: 500; }
+.m-field-optional { color: var(--m-muted); font-size: 12px; font-weight: 400; }
+.m-form-disclosure { margin: 22px 0; color: var(--m-muted); font-size: 12px; line-height: 1.8; }
+.m-submit { width: 100%; }
+.m-form-status { min-height: 24px; margin-top: 16px; color: var(--m-muted); font-size: 14px; line-height: 1.8; }
+.m-form-status[data-state='error'] { color: #a12e2e; }
+.m-form-status[data-state='success'] { color: #246347; }
+.m-form-fallback { margin-top: 12px; font-size: 13px; line-height: 1.8; color: var(--m-muted); }
+.m-form-fallback a { color: var(--m-accent); text-decoration: underline; }
+.m-analytics-preferences { max-width: 560px; font-size: 12px; line-height: 1.8; color: var(--m-muted); }
+.m-analytics-preferences summary { cursor: pointer; min-height: 44px; display: list-item; padding-block: 12px; }
+.m-analytics-preferences p { margin: 12px 0; }
+.m-analytics-preferences label { display: flex; gap: 10px; align-items: center; min-height: 48px; }
+.m-analytics-preferences input { width: 18px; height: 18px; accent-color: var(--m-accent); }
+@media (max-width: 479px) { .m-form-grid { grid-template-columns: minmax(0, 1fr); } }

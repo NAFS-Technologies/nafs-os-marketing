@@ -1,66 +1,53 @@
-import fs from 'fs'
-import path from 'path'
+import { readFile, readdir } from 'node:fs/promises'
+import path from 'node:path'
 
 import matter from 'gray-matter'
 
+import { isPublicPostSlug, isPublishedPost, parsePostMetadata, PUBLIC_POST_PREFIX } from '@/lib/editorial'
+import type { PostMetadata } from '@/lib/editorial'
+
+export type { PostMetadata } from '@/lib/editorial'
 export type Post = { metadata: PostMetadata; content: string }
-export type PostMetadata = {
-  slug: string
-  title?: string
-  description?: string
-  category?: string
-  publishedAt?: string
-  author?: { name: string; picture: string }
-  image?: string
-  readTime?: string
-  keywords?: string[]
-}
 
 const rootDirectory = path.join(process.cwd(), 'src', 'content', 'blog')
-const PUBLIC_POST_PREFIX = 'nafs-'
 
-export async function getPostBySlug(slug: string): Promise<Post | null> {
-  if (!slug.startsWith(PUBLIC_POST_PREFIX)) return null
+async function readPost(slug: string): Promise<Post | null> {
+  if (!isPublicPostSlug(slug)) return null
+
+  let source: string
 
   try {
-    const filePath = path.join(rootDirectory, `${slug}.mdx`)
-    const fileContent = fs.readFileSync(filePath, { encoding: 'utf8' })
-    const { data, content } = matter(fileContent)
-
-    return { metadata: { ...data, slug }, content }
-  } catch {
-    return null
+    source = await readFile(path.join(rootDirectory, `${slug}.mdx`), 'utf8')
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return null
+    throw error
   }
+
+  const { data, content } = matter(source)
+
+  return { metadata: parsePostMetadata(slug, data), content }
+}
+
+export async function getPostBySlug(slug: string): Promise<Post | null> {
+  const post = await readPost(slug)
+
+  return post && isPublishedPost(post.metadata) ? post : null
 }
 
 export async function getPosts(limit?: number): Promise<PostMetadata[]> {
-  try {
-    const files = fs
-      .readdirSync(rootDirectory)
-      .filter(file => file.startsWith(PUBLIC_POST_PREFIX) && file.endsWith('.mdx'))
+  const names = await readdir(rootDirectory)
+  const posts = await Promise.all(names.filter(name => name.startsWith(PUBLIC_POST_PREFIX) && name.endsWith('.mdx')).map(name => readPost(name.slice(0, -4))))
+  const published = posts.filter((post): post is Post => post !== null && isPublishedPost(post.metadata)).map(post => post.metadata).sort((a, b) => b.publishedAt.localeCompare(a.publishedAt) || a.slug.localeCompare(b.slug))
 
-    const posts = await Promise.all(files.map(file => getPostMetadata(file)))
-    const sortedPosts = posts.sort((a, b) => new Date(b.publishedAt ?? '').getTime() - new Date(a.publishedAt ?? '').getTime())
-
-    return limit ? sortedPosts.slice(0, limit) : sortedPosts
-  } catch (error) {
-    console.error('Error fetching posts:', error)
-
-    return []
-  }
+  return limit === undefined ? published : published.slice(0, Math.max(0, Math.floor(limit)))
 }
 
 export async function getPostMetadata(filepath: string): Promise<PostMetadata> {
-  try {
-    const slug = filepath.replace(/\.mdx$/, '')
-    const filePath = path.join(rootDirectory, filepath)
-    const fileContent = fs.readFileSync(filePath, { encoding: 'utf8' })
-    const { data } = matter(fileContent)
+  if (!filepath.endsWith('.mdx')) throw new Error('Article metadata requires an MDX filename')
 
-    return { ...data, slug }
-  } catch (error) {
-    console.error(`Error fetching metadata for ${filepath}:`, error)
+  const post = await readPost(filepath.slice(0, -4))
 
-    return { slug: filepath.replace(/\.mdx$/, '') }
-  }
+  if (!post) throw new Error(`Article not found: ${filepath}`)
+
+  return post.metadata
 }
