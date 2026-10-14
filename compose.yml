@@ -6,10 +6,14 @@ services:
     build:
       context: .
       args:
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-}
         NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://app.nafs.tech}
+        NEXT_PUBLIC_ERP_URL: ${NEXT_PUBLIC_ERP_URL:-https://app.nafs.tech}
         NEXT_PUBLIC_SIGN_IN_URL: ${NEXT_PUBLIC_SIGN_IN_URL:-https://app.nafs.tech/auth/sign-in}
         NEXT_PUBLIC_CONTACT_EMAIL: ${NEXT_PUBLIC_CONTACT_EMAIL:-hello@nafsos.com}
         NEXT_PUBLIC_DEMO_URL: ${NEXT_PUBLIC_DEMO_URL:-/#contact}
+        NEXT_PUBLIC_INDEXABLE: ${NEXT_PUBLIC_INDEXABLE:-1}
+        NEXT_PUBLIC_TRIAL_ENABLED: ${NEXT_PUBLIC_TRIAL_ENABLED:-0}
     environment:
       NAFS_LEAD_WEBHOOK_URL: ${NAFS_LEAD_WEBHOOK_URL:-}
       STUDIO_RENDERER_ENABLED: ${STUDIO_RENDERER_ENABLED:-0}
